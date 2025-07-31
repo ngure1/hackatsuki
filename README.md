@@ -1,5 +1,5 @@
 # 🚀 Hackatsuki
-> **Inter University Hackathon 2025** - Building the future, one line of code at a time
+> **Inter University Hackathon 2025**
 
 ---
 
