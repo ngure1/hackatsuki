@@ -67,7 +67,11 @@ sorry we don't do that here #(l + ratio + major skill issues)
    ```bash
    export PATH="$PATH:$(go env GOPATH)/bin"
    ```
-
+### Air (Live reloading)
+1. **Install air:**
+   ```bash
+   go install github.com/air-verse/air@latest
+   ```
 
 <!-- ## Project Setup -->
 

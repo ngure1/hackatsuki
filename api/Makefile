@@ -13,9 +13,5 @@ protogen:
 		echo -e "Generated: $$proto_file → $$out_dir \n"; \
 	done
 
-run: build
-	@./bin/$(OUT_BIN)
-
-build:
-	@go build -o ./bin/$(OUT_BIN) cmd/server/main.go
-	@chmod +x ./bin/$(OUT_BIN)
+run:
+	@air
