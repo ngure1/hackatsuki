@@ -49,7 +49,8 @@ sorry we don't do that here #(l + ratio + major skill issues)
 ### Protobuff tooling (Linux only)
 1. **Install protobuf compiler:**
    ```bash
-   # Fedora (use your package manager in place of dnf)
+   # Fedora (use your package manager in place of dnf)   protoc --version
+
    sudo dnf install -y protobuf-compiler
    ```
 2. **Verify the installation:**

@@ -1,4 +1,5 @@
 PROTO_DIR=proto
+OUT_BIN=out
 
 protogen:
 	@find $(PROTO_DIR) -name '*.proto' | while read proto_file; do \
@@ -11,3 +12,10 @@ protogen:
 			--go-grpc_out=$$out_dir --go-grpc_opt=paths=source_relative; \
 		echo -e "Generated: $$proto_file → $$out_dir \n"; \
 	done
+
+run: build
+	@./bin/$(OUT_BIN)
+
+build:
+	@go build -o ./bin/$(OUT_BIN) cmd/server/main.go
+	@chmod +x ./bin/$(OUT_BIN)
