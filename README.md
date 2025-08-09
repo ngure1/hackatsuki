@@ -17,7 +17,7 @@ Our project follows a **monolithic architecture** for rapid development and depl
 
 ```
 hackatsuki/
-├── 📱 mobile/          # React Native client app
+├── 📱 mobile/          # Flutter client app
 ├── 🔧 api/             # Golang backend services
 └── 📖 README.md        # Project documentation
 ```
@@ -65,9 +65,8 @@ hackatsuki/
 <div align="center">
 
 ### Frontend
-![React Native](https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
-![Expo](https://img.shields.io/badge/Expo-1B1F23?style=for-the-badge&logo=expo&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
+![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)
+![Dart](https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white)
 
 ### Backend
 ![Go](https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white)
