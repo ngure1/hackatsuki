@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/theme.dart';
+import 'package:mobile/views/widgets/custom_container_widget.dart';
 
 class RecentActivityCardWidget extends StatelessWidget {
   const RecentActivityCardWidget({
@@ -18,8 +20,10 @@ class RecentActivityCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(10.0),
+    return CustomContainerWidget(
+      color: AppTheme.gray1,
+      horizontalPadding: 10.0,
+      verticalPadding: 10.0,
       child: Row(
         children: [
           Image.asset(imageUrl),

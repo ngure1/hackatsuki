@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/theme.dart';
+import 'package:mobile/views/widgets/custom_container_widget.dart';
 
 class NavigationContainerWidget extends StatelessWidget {
   const NavigationContainerWidget({
@@ -9,7 +11,7 @@ class NavigationContainerWidget extends StatelessWidget {
     required this.icon,
   });
 
-  final IconData icon;
+  final String icon;
   final String title;
   final String description;
   final Function onTap;
@@ -18,19 +20,28 @@ class NavigationContainerWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10.0),
-        decoration: BoxDecoration(
-          //TODO: figure out how to add the unique decoration to the first box
+      child: CustomContainerWidget(
+        color: AppTheme.white,
+        horizontalPadding: 10.0,
+        verticalPadding: 10.0,
+        border: BoxBorder.all(
+          color: AppTheme.gray1,
+
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon),
-            SizedBox(height: 10.0),
-            Text(title, style: TextStyle(),),
-            SizedBox(height: 10.0),
-            Text(description, textAlign: TextAlign.center,style: TextStyle(),),
+            Image.asset(icon, width: 20, height: 20,),
+            SizedBox(height: 8.0),
+            Text(title, style: TextStyle(
+              fontSize: AppTheme.fontSizeSM,
+              color: AppTheme.green1
+            )),
+            SizedBox(height: 5.0),
+            Text(description, textAlign: TextAlign.center, style: TextStyle(
+              fontSize: AppTheme.fontSizeXS
+            )),
           ],
         ),
       ),
