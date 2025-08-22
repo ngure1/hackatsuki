@@ -4,14 +4,15 @@ class AppTheme {
   static const Color white = Color(0xFFFFFFFF);
   static const Color textGray = Color(0xFF6B7280);
   static const Color green1 = Color(0xFF166534);
-  static const Color buttonGreen = Color(0xFF22C55E);
+  static const Color green3 = Color(0xFF22C55E);
   static const Color black = Color(0xFF000000);
-  static const Color gray1 = Color(0xFFE5E7EB);
+  static const Color gray1 = Color.fromRGBO(229, 231, 235, 1);
   static const Color gray2 = Color(0xFF9CA3AF);
   static const Color lightGray1 = Color(0xFFF9FAFB);
   static const Color lightGreen1 = Color(0xFFF0F9F0);
   static const Color lightGreen2 = Color(0xFFE8F5E8);
   static const Color green2 = Color(0xFF16A34A);
+  static const Color green4 = Color(0xFFF0F9F0);
   static const Color buttonTextColor = Color(0xFF374151);
   static const Color gray3 = Color(0xFF757575);
   static const Color appBarBorder = Color(0xFFE2E8F0);
@@ -19,7 +20,7 @@ class AppTheme {
   static const Color appBarBackground = white;
   
   // Font Sizes
-  static const double fontSizeXS = 12.0;
+  static const double fontSizeXS = 10.0;
   static const double fontSizeSM = 14.0;
   static const double fontSizeBase = 16.0;
   static const double fontSizeLG = 18.0;
@@ -64,7 +65,7 @@ class AppTheme {
   
   static const TextStyle titleLarge = TextStyle(
     fontSize: fontSizeXL,
-    fontWeight: fontWeightMedium,
+    fontWeight: fontWeightExtraBold,
     height: lineHeightNormal,
   );
   
@@ -93,14 +94,14 @@ class AppTheme {
   );
   
   static const TextStyle bodySmall = TextStyle(
-    fontSize: fontSizeSM,
+    fontSize: fontSizeXS,
     fontWeight: fontWeightNormal,
     height: lineHeightNormal,
   );
   
   static const TextStyle labelLarge = TextStyle(
     fontSize: fontSizeBase,
-    fontWeight: fontWeightMedium,
+    fontWeight: fontWeightExtraBold,
     height: lineHeightNormal,
   );
   
@@ -144,7 +145,7 @@ class AppTheme {
   static LinearGradient get buttonGradient => const LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [buttonGreen, green2], 
+    colors: [green3, green2], 
   );
 
   // Appbar theme  

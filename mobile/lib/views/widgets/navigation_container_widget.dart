@@ -34,14 +34,9 @@ class NavigationContainerWidget extends StatelessWidget {
           children: [
             Image.asset(icon, width: 20, height: 20,),
             SizedBox(height: 8.0),
-            Text(title, style: TextStyle(
-              fontSize: AppTheme.fontSizeSM,
-              color: AppTheme.green1
-            )),
+            Text(title, style: AppTheme.titleSmall.copyWith(color: AppTheme.green1)),
             SizedBox(height: 5.0),
-            Text(description, textAlign: TextAlign.center, style: TextStyle(
-              fontSize: AppTheme.fontSizeXS
-            )),
+            Text(description, textAlign: TextAlign.center, style: AppTheme.bodySmall),
           ],
         ),
       ),

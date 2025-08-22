@@ -21,26 +21,48 @@ class RecentActivityCardWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomContainerWidget(
-      color: AppTheme.gray1,
-      horizontalPadding: 10.0,
-      verticalPadding: 10.0,
+      color: AppTheme.lightGray1,
+      horizontalPadding: 20.0,
+      verticalPadding: 5.0,
       child: Row(
         children: [
-          Image.asset(imageUrl),
-          SizedBox(width: 15.0),
-          Column(
-            // TODO: Align the text at the start of the parent
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(plantName),
-              // SizedBox(height: 5.0),
-              Text(diseaseSummary),
-              // SizedBox(height: 5.0),
-              Text(time),
-            ],
+          CustomContainerWidget(
+            color: AppTheme.white,
+            horizontalPadding: 5.0,
+            verticalPadding: 5.0,
+            child: Image.asset(imageUrl),
           ),
-          SizedBox(width: 20.0),
-          Text('$accuracy %'),
+          SizedBox(width: 15.0),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  plantName,
+                  style: AppTheme.labelLarge.copyWith(color: AppTheme.green1),
+                ),
+                // SizedBox(height: 5.0),
+                Text(
+                  diseaseSummary,
+                  style: AppTheme.labelMedium.copyWith(color: AppTheme.gray3),
+                ),
+                SizedBox(height: 10.0),
+                Text(
+                  time,
+                  style: AppTheme.labelSmall.copyWith(color: AppTheme.gray2),
+                ),
+              ],
+            ),
+          ),
+          CustomContainerWidget(
+            color: AppTheme.green3,
+            horizontalPadding: 15.0,
+            verticalPadding: 7.0,
+            child: Text(
+              '$accuracy %',
+              style: AppTheme.labelMedium.copyWith(color: AppTheme.white),
+            ),
+          ),
         ],
       ),
     );
