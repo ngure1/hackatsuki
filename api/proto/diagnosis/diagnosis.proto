@@ -13,7 +13,7 @@ option go_package = "github.com/ngure1/hackatsuki/proto/diagnosispb";
 */
 
 service Diagnosis {
-  rpc GetDiagnosis(DiagnosisRequest) returns (DiagnosisResponse) {}
+  rpc GetDiagnosis(DiagnosisRequest) returns (stream DiagnosisResponse) {}
 }
 
 message DiagnosisRequest {
