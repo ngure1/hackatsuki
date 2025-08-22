@@ -219,13 +219,38 @@ class _HomePageState extends State<HomePage> {
                             Expanded(child: Divider(thickness: 1.0)),
                           ],
                         ),
+                        SizedBox(height: 5,),
                         TextField(
                           controller: _diseaseSymptomController,
                           onEditingComplete: () {
                             setState(() {});
                             _diseaseSymptomController.clear();
                           },
-                          
+                          decoration: InputDecoration(
+                            hintText: "E.g. yellow leaves with brown spots",
+                            hintStyle: AppTheme.labelMedium.copyWith(
+                              color: AppTheme.gray2
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(
+                                12.0,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                color: AppTheme.green2,
+                                width: 2.0,
+                              ),
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                color: AppTheme.textGray,
+                                width: 1.0,
+                              ),
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
+                          ),
                         ),
                       ],
                     ),
