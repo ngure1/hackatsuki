@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/navigation/widget_tree.dart';
+import 'package:mobile/providers/image_provider.dart';
 import 'package:mobile/theme.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(    
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ImageProviderNotifier()),
+      ],
+      child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {

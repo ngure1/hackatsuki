@@ -1,26 +1,33 @@
 import "package:dotted_border/dotted_border.dart";
 import "package:flutter/material.dart";
+import "package:mobile/providers/image_provider.dart";
 import "package:mobile/theme.dart";
 import "package:mobile/views/widgets/appbar_widget.dart";
 import "package:mobile/views/widgets/custom_container_widget.dart";
+import "package:mobile/views/widgets/custom_text_field_widget.dart";
+import "package:mobile/views/widgets/image_source_dialogue_widget.dart";
 import "package:mobile/views/widgets/navbar_widget.dart";
 import "package:mobile/views/widgets/navigation_container_widget.dart";
 import "package:mobile/views/widgets/recent_activity_card_widget.dart";
 import "package:mobile/views/widgets/stat_card_widget.dart";
+import "package:provider/provider.dart";
 
-class HomePage extends StatefulWidget {
+class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
-  @override
-  State<HomePage> createState() => _HomePageState();
-}
+  void _showImageSourceOptions(BuildContext context) {
+    final imageProvider = context.read<ImageProviderNotifier>();
 
-class _HomePageState extends State<HomePage> {
-  final TextEditingController _diseaseSymptomController =
-      TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => ImageSourceDialogueWidget(imageProvider: imageProvider),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final imageProvider = context.watch<ImageProviderNotifier>();
+
     return Scaffold(
       appBar: AppbarWidget(),
       bottomNavigationBar: NavbarWidget(),
@@ -70,11 +77,11 @@ class _HomePageState extends State<HomePage> {
                     crossAxisSpacing: 5,
                     mainAxisSpacing: 5,
                     crossAxisCount: 2,
-                    childAspectRatio: 2.0,
+                    childAspectRatio: 1.7,
                     children: [
                       //TODO: Refactor the first child of this grid
                       NavigationContainerWidget(
-                        onTap: () {},
+                        onTap: () => imageProvider.handleCameraSelection(context),
                         icon: 'assets/images/camera_shutter_icon.png',
                         title: 'Scan Plant',
                         description:
@@ -128,24 +135,33 @@ class _HomePageState extends State<HomePage> {
                         ),
                         SizedBox(height: 15.0),
 
-                        DottedBorder(
-                          options: CircularDottedBorderOptions(
-                            padding: EdgeInsets.all(0),
-                            dashPattern: [7, 4],
-                            color: AppTheme.green2,
-                            strokeWidth: 2,
-                          ),
-                          child: Container(
-                            padding: EdgeInsets.all(30),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(100),
-                              color: AppTheme.green4,
+                        GestureDetector(
+                          onTap: () => _showImageSourceOptions(context),
+                          child: DottedBorder(
+                            options: CircularDottedBorderOptions(
+                              padding: EdgeInsets.all(0),
+                              dashPattern: [7, 4],
+                              color: AppTheme.green2,
+                              strokeWidth: 2,
                             ),
-                            child: Image.asset(
-                              'assets/images/camera_shutter_icon.png',
-                              width: 25,
-                              height: 25,
-                            ),
+                            child: imageProvider.selectedImage != null
+                                ? Image.file(
+                                    imageProvider.selectedImage!,
+                                    height: 100,
+                                    width: 100,
+                                  )
+                                : Container(
+                                    padding: EdgeInsets.all(30),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(100),
+                                      color: AppTheme.green4,
+                                    ),
+                                    child: Image.asset(
+                                      'assets/images/camera_shutter_icon.png',
+                                      width: 25,
+                                      height: 25,
+                                    ),
+                                  ),
                           ),
                         ),
                         SizedBox(height: 10.0),
@@ -157,7 +173,7 @@ class _HomePageState extends State<HomePage> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             TextButton(
-                              onPressed: () {},
+                              onPressed: () => imageProvider.handleCameraSelection(context),
                               style: TextButton.styleFrom(
                                 backgroundColor: AppTheme.green3,
                               ),
@@ -180,7 +196,7 @@ class _HomePageState extends State<HomePage> {
                             ),
                             SizedBox(width: 5.0),
                             TextButton(
-                              onPressed: () {},
+                              onPressed: ()=> imageProvider.handleGallerySelection(context),
                               style: TextButton.styleFrom(
                                 backgroundColor: AppTheme.gray1,
                               ),
@@ -219,38 +235,11 @@ class _HomePageState extends State<HomePage> {
                             Expanded(child: Divider(thickness: 1.0)),
                           ],
                         ),
-                        SizedBox(height: 5,),
-                        TextField(
-                          controller: _diseaseSymptomController,
-                          onEditingComplete: () {
-                            setState(() {});
-                            _diseaseSymptomController.clear();
-                          },
-                          decoration: InputDecoration(
-                            hintText: "E.g. yellow leaves with brown spots",
-                            hintStyle: AppTheme.labelMedium.copyWith(
-                              color: AppTheme.gray2
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(
-                                12.0,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                color: AppTheme.green2,
-                                width: 2.0,
-                              ),
-                              borderRadius: BorderRadius.circular(12.0),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                color: AppTheme.textGray,
-                                width: 1.0,
-                              ),
-                              borderRadius: BorderRadius.circular(12.0),
-                            ),
-                          ),
+                        SizedBox(height: 5),
+                        CustomTextFieldWidget(
+                          liveSearch: false,
+                          //TODO: Implement the onSearch feature and make it required
+                          hinttext: 'E.g yellow leaves with brown spots',
                         ),
                       ],
                     ),
@@ -349,3 +338,5 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
+
+

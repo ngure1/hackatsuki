@@ -5,7 +5,8 @@ import 'package:flutter/material.dart';
 
   @override
   Widget build(BuildContext context) {
-    return AppBar(title: Image.asset('assets/images/aigrow_logo.png'), );
+    return AppBar(
+      title: Image.asset('assets/images/aigrow_logo.png'), );
   }
 
   @override
