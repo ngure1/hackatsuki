@@ -1,20 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/navigation/widget_tree.dart';
+import 'package:mobile/providers/image_provider.dart';
+import 'package:mobile/theme.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(const MainApp());
+  runApp(    
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ImageProviderNotifier()),
+      ],
+      child: MyApp()));
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
-  @override
+  @override  
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        appBarTheme: AppTheme.appBarTheme,
       ),
+      home: WidgetTree(),
     );
   }
 }
