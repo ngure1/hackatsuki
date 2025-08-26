@@ -129,9 +129,9 @@ const file_diagnosis_diagnosis_proto_rawDesc = "" +
 	"\x06prompt\x18\x02 \x01(\tH\x00R\x06prompt\x88\x01\x01B\t\n" +
 	"\a_prompt\"9\n" +
 	"\x11DiagnosisResponse\x12$\n" +
-	"\rmodelResponse\x18\x01 \x01(\tR\rmodelResponse2X\n" +
-	"\tDiagnosis\x12K\n" +
-	"\fGetDiagnosis\x12\x1b.diagnosis.DiagnosisRequest\x1a\x1c.diagnosis.DiagnosisResponse\"\x00B0Z.github.com/ngure1/hackatsuki/proto/diagnosispbb\x06proto3"
+	"\rmodelResponse\x18\x01 \x01(\tR\rmodelResponse2Z\n" +
+	"\tDiagnosis\x12M\n" +
+	"\fGetDiagnosis\x12\x1b.diagnosis.DiagnosisRequest\x1a\x1c.diagnosis.DiagnosisResponse\"\x000\x01B0Z.github.com/ngure1/hackatsuki/proto/diagnosispbb\x06proto3"
 
 var (
 	file_diagnosis_diagnosis_proto_rawDescOnce sync.Once

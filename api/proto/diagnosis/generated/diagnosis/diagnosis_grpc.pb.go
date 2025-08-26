@@ -26,7 +26,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type DiagnosisClient interface {
-	GetDiagnosis(ctx context.Context, in *DiagnosisRequest, opts ...grpc.CallOption) (*DiagnosisResponse, error)
+	GetDiagnosis(ctx context.Context, in *DiagnosisRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[DiagnosisResponse], error)
 }
 
 type diagnosisClient struct {
@@ -37,21 +37,30 @@ func NewDiagnosisClient(cc grpc.ClientConnInterface) DiagnosisClient {
 	return &diagnosisClient{cc}
 }
 
-func (c *diagnosisClient) GetDiagnosis(ctx context.Context, in *DiagnosisRequest, opts ...grpc.CallOption) (*DiagnosisResponse, error) {
+func (c *diagnosisClient) GetDiagnosis(ctx context.Context, in *DiagnosisRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[DiagnosisResponse], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(DiagnosisResponse)
-	err := c.cc.Invoke(ctx, Diagnosis_GetDiagnosis_FullMethodName, in, out, cOpts...)
+	stream, err := c.cc.NewStream(ctx, &Diagnosis_ServiceDesc.Streams[0], Diagnosis_GetDiagnosis_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &grpc.GenericClientStream[DiagnosisRequest, DiagnosisResponse]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
 }
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Diagnosis_GetDiagnosisClient = grpc.ServerStreamingClient[DiagnosisResponse]
 
 // DiagnosisServer is the server API for Diagnosis service.
 // All implementations must embed UnimplementedDiagnosisServer
 // for forward compatibility.
 type DiagnosisServer interface {
-	GetDiagnosis(context.Context, *DiagnosisRequest) (*DiagnosisResponse, error)
+	GetDiagnosis(*DiagnosisRequest, grpc.ServerStreamingServer[DiagnosisResponse]) error
 	mustEmbedUnimplementedDiagnosisServer()
 }
 
@@ -62,8 +71,8 @@ type DiagnosisServer interface {
 // pointer dereference when methods are called.
 type UnimplementedDiagnosisServer struct{}
 
-func (UnimplementedDiagnosisServer) GetDiagnosis(context.Context, *DiagnosisRequest) (*DiagnosisResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetDiagnosis not implemented")
+func (UnimplementedDiagnosisServer) GetDiagnosis(*DiagnosisRequest, grpc.ServerStreamingServer[DiagnosisResponse]) error {
+	return status.Errorf(codes.Unimplemented, "method GetDiagnosis not implemented")
 }
 func (UnimplementedDiagnosisServer) mustEmbedUnimplementedDiagnosisServer() {}
 func (UnimplementedDiagnosisServer) testEmbeddedByValue()                   {}
@@ -86,23 +95,16 @@ func RegisterDiagnosisServer(s grpc.ServiceRegistrar, srv DiagnosisServer) {
 	s.RegisterService(&Diagnosis_ServiceDesc, srv)
 }
 
-func _Diagnosis_GetDiagnosis_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DiagnosisRequest)
-	if err := dec(in); err != nil {
-		return nil, err
+func _Diagnosis_GetDiagnosis_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(DiagnosisRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
 	}
-	if interceptor == nil {
-		return srv.(DiagnosisServer).GetDiagnosis(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Diagnosis_GetDiagnosis_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DiagnosisServer).GetDiagnosis(ctx, req.(*DiagnosisRequest))
-	}
-	return interceptor(ctx, in, info, handler)
+	return srv.(DiagnosisServer).GetDiagnosis(m, &grpc.GenericServerStream[DiagnosisRequest, DiagnosisResponse]{ServerStream: stream})
 }
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Diagnosis_GetDiagnosisServer = grpc.ServerStreamingServer[DiagnosisResponse]
 
 // Diagnosis_ServiceDesc is the grpc.ServiceDesc for Diagnosis service.
 // It's only intended for direct use with grpc.RegisterService,
@@ -110,12 +112,13 @@ func _Diagnosis_GetDiagnosis_Handler(srv interface{}, ctx context.Context, dec f
 var Diagnosis_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "diagnosis.Diagnosis",
 	HandlerType: (*DiagnosisServer)(nil),
-	Methods: []grpc.MethodDesc{
+	Methods:     []grpc.MethodDesc{},
+	Streams: []grpc.StreamDesc{
 		{
-			MethodName: "GetDiagnosis",
-			Handler:    _Diagnosis_GetDiagnosis_Handler,
+			StreamName:    "GetDiagnosis",
+			Handler:       _Diagnosis_GetDiagnosis_Handler,
+			ServerStreams: true,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
 	Metadata: "diagnosis/diagnosis.proto",
 }
