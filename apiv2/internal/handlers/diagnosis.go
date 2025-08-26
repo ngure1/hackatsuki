@@ -2,16 +2,19 @@ package handlers
 
 import (
 	"apiv2/internal/models"
+	p "apiv2/internal/prompt"
 	"fmt"
+	"os"
 	"strconv"
 	"sync"
-	"time"
+
+	"google.golang.org/genai"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 )
 
-const FilePath = "./"
+const FilePath = "./media/"
 
 func (h *Handler) GetDiagnosis(c *fiber.Ctx) error {
 	chatIdStr := c.Params("chatId")
@@ -67,15 +70,42 @@ func (h *Handler) GetDiagnosis(c *fiber.Ctx) error {
 	}()
 
 	wg.Add(1)
+	var response string
 	go func() {
-		//make gemini api call here
+		ctx := c.UserContext()
+		client, err := genai.NewClient(ctx, &genai.ClientConfig{
+			APIKey:  os.Getenv("GEMINI_API_KEY"),
+			Backend: genai.BackendGeminiAPI,
+		})
+		if err != nil {
+			log.Errorf("error creating genai client: %s \n", err)
+		}
+
+		uploadedFile, _ := client.Files.UploadFromPath(ctx, fmt.Sprintf("%s%s", FilePath, file.Filename), nil)
+
+		parts := []*genai.Part{
+			genai.NewPartFromText(fmt.Sprintf("System Prompt: \n %s", p.SystemPrompt)),
+			genai.NewPartFromText(fmt.Sprintf("User Prompt: \n %s", prompt)),
+			genai.NewPartFromURI(uploadedFile.URI, uploadedFile.MIMEType),
+		}
+
+		contents := []*genai.Content{
+			genai.NewContentFromParts(parts, genai.RoleUser),
+		}
+
+		result, _ := client.Models.GenerateContent(
+			ctx,
+			"gemini-2.5-flash",
+			contents,
+			nil,
+		)
+		response = result.Text()
 		defer wg.Done()
-		time.Sleep(5 * time.Second)
 	}()
 
 	wg.Wait()
 
 	return c.JSON(&fiber.Map{
-		"chatId": chatId,
+		"response": response,
 	})
 }
