@@ -24,6 +24,11 @@ func (s *FiberServer) RegisterFiberRoutes() {
 	us := store.NewUserStore(db)
 	h := handlers.New(*cs, *ms, *us)
 
+	//auth routes
+	s.Post("/signin", h.SigninHandler)
+	s.Post("/signup", h.SignupHandler)
+
+	//chat routes
 	chatRoutes := s.Group("/chats")
 	chatRoutes.Post("/", h.CreateChat)
 	chatRoutes.Post("/:chatId/diagnosis", h.GetDiagnosis)
