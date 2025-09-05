@@ -33,9 +33,52 @@ func (h *Handler) SigninHandler(c *fiber.Ctx) error {
 	return handleLogin(user, body.Password)(c)
 }
 
-func (h *Handler) SignupHandler(ctx *fiber.Ctx) error {
+func (h *Handler) SignupHandler(c *fiber.Ctx) error {
+	body := new(SignUpRequest)
+	if err := c.BodyParser(body); err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
 
-	return nil
+	if body.Email == "" || body.Password == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
+			"message": "Password or email cannot be empty",
+			"error":   "Vallidation failed",
+		})
+	}
+
+	user, err := h.userStore.GetUserByEmail(body.Email)
+	if user != nil || err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
+			"message": "user with that email already exists",
+			"error":   err.Error(),
+		})
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
+			"message": "Error hashing password",
+			"error":   err.Error(),
+		})
+	}
+
+	newUser := models.User{
+		FirstName:    body.FirstName,
+		LastName:     body.LastName,
+		Email:        &body.Email,
+		PasswordHash: string(hashedPassword),
+		// PhoneNumber: &body.PhoneNumber,
+	}
+
+	err = h.userStore.Create(newUser)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
+			"message": "Error creating user",
+			"error":   err.Error(),
+		})
+	}
+
+	return handleLogin(&newUser, body.Password)(c)
 }
 
 func handleLogin(user *models.User, password string) func(c *fiber.Ctx) error {
@@ -43,7 +86,7 @@ func handleLogin(user *models.User, password string) func(c *fiber.Ctx) error {
 		if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
 				"message": "Invalid email or password",
-				"error":   err,
+				"error":   err.Error(),
 			})
 		}
 
