@@ -37,7 +37,7 @@ func (h *Handler) GetChats(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
-		"chats":      chats,
-		"totalPages": totalPages,
+		"chats":       chats,
+		"total_pages": totalPages,
 	})
 }
