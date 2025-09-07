@@ -9,8 +9,15 @@ import (
 const chatsPerPage = 10
 
 func (h *Handler) CreateChat(c *fiber.Ctx) error {
-	// todo: implement auth middleware to get the userid from c.locals
-	chatId, err := h.chatStore.Create(&models.Chat{})
+	userId, ok := c.Locals("userId").(uint)
+	var chat models.Chat
+	if ok {
+		chat = models.Chat{
+			UserID: &userId,
+		}
+	}
+
+	chatId, err := h.chatStore.Create(&chat)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
 			"message": "error creating chat",
