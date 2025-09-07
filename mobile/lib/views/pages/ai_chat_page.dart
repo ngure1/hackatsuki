@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/data/models/chat_message.dart';
 import 'package:mobile/providers/image_provider.dart';
+import 'package:mobile/providers/message_provider.dart';
 import 'package:mobile/views/widgets/appbar_widget.dart';
 import 'package:mobile/views/widgets/build_message_bubble_widget.dart';
-import 'package:mobile/views/widgets/navbar_widget.dart';
 import 'package:provider/provider.dart';
 
 class AiChatPage extends StatefulWidget {
@@ -14,56 +13,47 @@ class AiChatPage extends StatefulWidget {
 }
 
 class _AiChatPageState extends State<AiChatPage> {
-  final List<ChatMessage> _messages = [];
   final TextEditingController _inputController = TextEditingController();
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _prepareInitialMessage());
-  }
-
-  void _prepareInitialMessage() {
+void initState() {
+  super.initState();
+  WidgetsBinding.instance.addPostFrameCallback((_) {
     final imageProvider = context.read<ImageProviderNotifier>();
+    final messageProvider = context.read<MessageProvider>();
 
-    if (imageProvider.selectedImage != null) {
-      final plantDetails = imageProvider.getFormattedPlantDetails();
+    final initialMessage =
+        messageProvider.prepareInitialMessage(imageProvider);
 
-      String initialMessage =
-          "Please analyze this plant image for any diseases or issues.";
+    final details = imageProvider.getFormattedPlantDetails();
 
-      if (plantDetails.isNotEmpty) {
-        initialMessage += "\n\nAdditional details:\n$plantDetails";
-      }
-
-      _inputController.text = initialMessage;
+    if (initialMessage.isNotEmpty || details.isNotEmpty) {
+      _inputController.text = [
+        if (initialMessage.isNotEmpty) initialMessage,
+        if (details.isNotEmpty) details,
+      ].join('\n\n');
     }
-  }
+  });
+}
+
 
   void _sendMessage() {
     final imageProvider = context.read<ImageProviderNotifier>();
+    final messageProvider = context.read<MessageProvider>();
     final text = _inputController.text.trim();
 
     if (text.isEmpty && imageProvider.selectedImage == null) {
       return;
     }
 
-    setState(() {
-      _messages.add(
-        ChatMessage(
-          text: text,
-          image: imageProvider.selectedImage,
-          timestamp: DateTime.now(),
-          isUser: true,
-        ),
-      );
-      _inputController.clear();
-    });
+    messageProvider.sendUserMessage(
+      text,
+      image: imageProvider.selectedImage,
+    );
 
+    _inputController.clear();
     imageProvider.clearImageDescription();
   }
-
-  
 
   Widget _buildInputBar() {
     final imageProvider = context.watch<ImageProviderNotifier>();
@@ -89,9 +79,11 @@ class _AiChatPageState extends State<AiChatPage> {
                   right: 0,
                   top: 0,
                   child: IconButton(
-                    icon: Icon(Icons.close, color: Colors.red),
+                    icon: const Icon(Icons.close, color: Colors.red),
                     onPressed: () {
-                      context.read<ImageProviderNotifier>().clearImageDescription();
+                      context
+                          .read<ImageProviderNotifier>()
+                          .clearImageDescription();
                     },
                   ),
                 ),
@@ -112,7 +104,7 @@ class _AiChatPageState extends State<AiChatPage> {
                 ),
               ),
               IconButton(
-                icon: Icon(Icons.send, color: Colors.green),
+                icon: const Icon(Icons.send, color: Colors.green),
                 onPressed: _sendMessage,
               ),
             ],
@@ -125,17 +117,20 @@ class _AiChatPageState extends State<AiChatPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppbarWidget(),
-      bottomNavigationBar: NavbarWidget(),
+      appBar: const AppbarWidget(),
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(10),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final msg = _messages[index];
-                return buildMessageBubble(msg);
+            child: Consumer<MessageProvider>(
+              builder: (context, provider, _) {
+                return ListView.builder(
+                  padding: const EdgeInsets.all(10),
+                  itemCount: provider.messages.length,
+                  itemBuilder: (context, index) {
+                    final msg = provider.messages[index];
+                    return buildMessageBubble(msg);
+                  },
+                );
               },
             ),
           ),

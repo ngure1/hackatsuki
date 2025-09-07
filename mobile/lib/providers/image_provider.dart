@@ -1,8 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:mobile/data/notifiers.dart';
 import 'package:mobile/data/services/image_service.dart';
+import 'package:mobile/providers/navigation_provider.dart';
 import 'package:mobile/views/widgets/plant_details_dialogue_widget.dart';
+import 'package:provider/provider.dart';
 
 class ImageProviderNotifier extends ChangeNotifier {
   final ImageService _service = ImageService();
@@ -47,7 +48,7 @@ class ImageProviderNotifier extends ChangeNotifier {
             description: description,
           );
           Navigator.pop(context);
-          selectedPageNotifier.value = 1;
+          context.read<NavigationProvider>().selectPage(1);
         },
       ),
     );

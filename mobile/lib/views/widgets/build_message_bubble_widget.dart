@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/data/models/chat_message.dart';
+import 'package:mobile/data/models/message.dart';
 
-Widget buildMessageBubble(ChatMessage msg) {
+Widget buildMessageBubble(Message msg) {
     final isUser = msg.isUser;
 
     return Align(
@@ -16,6 +16,7 @@ Widget buildMessageBubble(ChatMessage msg) {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (msg.image != null)   
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Image.file(
@@ -25,6 +26,7 @@ Widget buildMessageBubble(ChatMessage msg) {
                 fit: BoxFit.cover,
               ),
             ),
+          if (msg.text.isNotEmpty)   
             Text(msg.text),
           ],
         ),

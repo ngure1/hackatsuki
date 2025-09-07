@@ -19,7 +19,7 @@ class NavigationContainerWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => onTap,
+      onTap: () => onTap(),
       child: CustomContainerWidget(
         color: AppTheme.white,
         horizontalPadding: 10.0,

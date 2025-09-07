@@ -60,107 +60,109 @@ class _PlantDetailsDialogueWidgetState
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Image.asset(
-                  'assets/images/plant_image.png',
-                  width: 24,
-                  height: 24,
-                ),
-                SizedBox(width: 8),
-                Text(
-                  'Plant details',
-                  style: AppTheme.titleLarge.copyWith(color: AppTheme.green1),
-                ),
-              ],
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Add optional details to help our AI provide better diagnosis',
-              style: AppTheme.bodyMedium.copyWith(color: AppTheme.gray2),
-            ),
-            SizedBox(height: 20),
-            Text(
-              'Plant Name (Optional)',
-              style: AppTheme.labelMedium.copyWith(color: AppTheme.green1),
-            ),
-            SizedBox(height: 8),
-            DialogueTextField(
-              controller: _plantNameController,
-              hinttext: 'E.g. Tomato, Rose, Onion',
-            ),
-            SizedBox(height: 16.0),
-            Text(
-              'Plant Part (Optional)',
-              style: AppTheme.labelMedium.copyWith(color: AppTheme.green1),
-            ),
-            SizedBox(height: 8.0),
-            DropdownButtonFormField(
-              value: selectedPlantPart,
-              decoration: InputDecoration(
-                hintText: 'Select plant part',
-                hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.gray3),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: AppTheme.gray1),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: AppTheme.green2),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 12,
-                ),
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Image.asset(
+                    'assets/images/plant_image.png',
+                    width: 24,
+                    height: 24,
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    'Plant details',
+                    style: AppTheme.titleLarge.copyWith(color: AppTheme.green1),
+                  ),
+                ],
               ),
-              items: [
-                DropdownMenuItem(value: null, child: Text('Select plant part')),
-                ...plantParts.map(
-                  (part) => DropdownMenuItem(value: part, child: Text(part)),
+              SizedBox(height: 8),
+              Text(
+                'Add optional details to help our AI provide better diagnosis',
+                style: AppTheme.bodyMedium.copyWith(color: AppTheme.gray2),
+              ),
+              SizedBox(height: 20),
+              Text(
+                'Plant Name (Optional)',
+                style: AppTheme.labelMedium.copyWith(color: AppTheme.green1),
+              ),
+              SizedBox(height: 8),
+              DialogueTextField(
+                controller: _plantNameController,
+                hinttext: 'E.g. Tomato, Rose, Onion',
+              ),
+              SizedBox(height: 16.0),
+              Text(
+                'Plant Part (Optional)',
+                style: AppTheme.labelMedium.copyWith(color: AppTheme.green1),
+              ),
+              SizedBox(height: 8.0),
+              DropdownButtonFormField(
+                value: selectedPlantPart,
+                decoration: InputDecoration(
+                  hintText: 'Select plant part',
+                  hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.gray3),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: AppTheme.gray1),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: AppTheme.green2),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
                 ),
-              ],
-              onChanged: (value) => setState(() {
-                selectedPlantPart = value;
-              }),
-            ),
-            SizedBox(height: 16.0),
-            Text(
-              'Additional description (Optional)',
-              style: AppTheme.labelMedium.copyWith(color: AppTheme.green1),
-            ),
-            SizedBox(height: 8),
-            DialogueTextField(
-              controller: _descriptionController,
-              hinttext:
-                  'Describe what you observe i.e. colors, patterns, timing, etc',
-            ),
-            SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: () => widget.onSave(null, null, null),
-                  child: Text('Skip'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    widget.onSave(
-                      _plantNameController.text.trim().isEmpty ? null : _plantNameController.text.trim(),
-                      selectedPlantPart,
-                      _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
-                    );
-                  },
-                  child: Text('Continue'),
-                ),
-              ],
-            ),
-          ],
+                items: [
+                  DropdownMenuItem(value: null, child: Text('Select plant part')),
+                  ...plantParts.map(
+                    (part) => DropdownMenuItem(value: part, child: Text(part)),
+                  ),
+                ],
+                onChanged: (value) => setState(() {
+                  selectedPlantPart = value;
+                }),
+              ),
+              SizedBox(height: 16.0),
+              Text(
+                'Additional description (Optional)',
+                style: AppTheme.labelMedium.copyWith(color: AppTheme.green1),
+              ),
+              SizedBox(height: 8),
+              DialogueTextField(
+                controller: _descriptionController,
+                hinttext:
+                    'Describe what you observe i.e. colors, patterns, timing, etc',
+              ),
+              SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => widget.onSave(null, null, null),
+                    child: Text('Skip'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      widget.onSave(
+                        _plantNameController.text.trim().isEmpty ? null : _plantNameController.text.trim(),
+                        selectedPlantPart,
+                        _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
+                      );
+                    },
+                    child: Text('Continue'),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
