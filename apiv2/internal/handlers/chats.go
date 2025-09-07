@@ -25,8 +25,9 @@ func (h *Handler) CreateChat(c *fiber.Ctx) error {
 }
 
 func (h *Handler) GetChats(c *fiber.Ctx) error {
+	userId, _ := c.Locals("userId").(uint)
 	page := c.QueryInt("page", 1)
-	chats, totalPages, err := h.chatStore.GetChats(page, chatsPerPage, 1)
+	chats, totalPages, err := h.chatStore.GetChats(page, chatsPerPage, userId)
 
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{

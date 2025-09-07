@@ -102,7 +102,7 @@ func (h *Handler) SignupHandler(c *fiber.Ctx) error {
 	return HandleLogin(&newUser, body.Password)(c)
 }
 
-func HandleLogin(user *models.User, password string) func(c *fiber.Ctx) error {
+func HandleLogin(user *models.User, password string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		if *user.IsPasswordSet {
 			if err := bcrypt.CompareHashAndPassword([]byte(*user.PasswordHash), []byte(password)); err != nil {
