@@ -14,7 +14,7 @@ func New() *gorm.DB {
 		log.Fatal("error openning db", err)
 	}
 
-	// db.Migrator().DropTable(&models.Message{})
+	// db.Migrator().DropTable(&models.User{})
 	db.AutoMigrate(&models.User{}, &models.Chat{}, &models.Message{})
 	return db
 }

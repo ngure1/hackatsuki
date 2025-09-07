@@ -3,16 +3,21 @@ package handlers
 import (
 	"apiv2/auth"
 	"apiv2/internal/models"
+	"errors"
 
 	"github.com/gofiber/fiber/v2"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 func (h *Handler) SigninHandler(c *fiber.Ctx) error {
 	body := new(SigninRequest)
 
 	if err := c.BodyParser(body); err != nil {
-		return c.SendStatus(fiber.StatusInternalServerError)
+		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
+			"message": "error decoding body",
+			"error":   err.Error(),
+		})
 	}
 
 	if body.Email == "" || body.Password == "" {
@@ -24,13 +29,26 @@ func (h *Handler) SigninHandler(c *fiber.Ctx) error {
 
 	user, err := h.userStore.GetUserByEmail(body.Email)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
-			"message": "Error finding user by email",
-			"error":   err,
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
+				"message": "No account found with that email",
+				"error":   err.Error(),
+			})
+		}
+
+		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
+			"message": "Error querying user",
+			"error":   err.Error(),
 		})
 	}
 
-	return handleLogin(user, body.Password)(c)
+	if user == nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Unexpected: user is nil but no error",
+		})
+	}
+
+	return HandleLogin(user, body.Password)(c)
 }
 
 func (h *Handler) SignupHandler(c *fiber.Ctx) error {
@@ -54,7 +72,7 @@ func (h *Handler) SignupHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcrypt.DefaultCost)
+	hashedPasswordBytes, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
 			"message": "Error hashing password",
@@ -62,11 +80,14 @@ func (h *Handler) SignupHandler(c *fiber.Ctx) error {
 		})
 	}
 
+	hashedPassword := string(hashedPasswordBytes)
+	isPasswordSet := true
 	newUser := models.User{
-		FirstName:    body.FirstName,
-		LastName:     body.LastName,
-		Email:        &body.Email,
-		PasswordHash: string(hashedPassword),
+		FirstName:     body.FirstName,
+		LastName:      body.LastName,
+		Email:         &body.Email,
+		PasswordHash:  &hashedPassword,
+		IsPasswordSet: &isPasswordSet,
 		// PhoneNumber: &body.PhoneNumber,
 	}
 
@@ -78,18 +99,26 @@ func (h *Handler) SignupHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	return handleLogin(&newUser, body.Password)(c)
+	return HandleLogin(&newUser, body.Password)(c)
 }
 
-func handleLogin(user *models.User, password string) func(c *fiber.Ctx) error {
+func HandleLogin(user *models.User, password string) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
-		if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
-				"message": "Invalid email or password",
-				"error":   err.Error(),
-			})
+		if *user.IsPasswordSet {
+			if err := bcrypt.CompareHashAndPassword([]byte(*user.PasswordHash), []byte(password)); err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
+					"message": "Invalid email or password",
+					"error":   err.Error(),
+				})
+			}
+		} else {
+			if password != "" {
+				return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
+					"message": "This account was registered via google",
+					"error":   "you cannot sign in using regular email and password",
+				})
+			}
 		}
-
 		token, err := auth.GenerateToken(user)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{

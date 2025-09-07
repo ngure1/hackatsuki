@@ -15,17 +15,19 @@ type UserStore struct {
 // Create implements user.Store.
 func (us UserStore) Create(newUser models.User) error {
 	err := us.db.Create(&newUser).Error
-
-	return fmt.Errorf("error creating user: %s", err)
+	if err != nil {
+		return fmt.Errorf("error creating user: %w", err)
+	}
+	return nil
 }
 
 // GetUserByEmail implements user.Store.
 func (us UserStore) GetUserByEmail(email string) (*models.User, error) {
 	var existingUser models.User
-	err := us.db.Find("email = ? ", email).First(&existingUser).Error
+	err := us.db.Where("email = ? ", email).First(&existingUser).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, fmt.Errorf("user with that email not found: %s", err)
+		return nil, err
 	}
 
 	if err != nil {

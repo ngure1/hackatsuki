@@ -27,7 +27,8 @@ func (s *FiberServer) RegisterFiberRoutes() {
 	//auth routes
 	s.Post("/signin", h.SigninHandler)
 	s.Post("/signup", h.SignupHandler)
-
+	s.Get("/oauth/google", h.GoogleAuthHandler)
+	s.Get("/oauth/redirect", h.GoogleAuthRedirectHandler)
 	//chat routes
 	chatRoutes := s.Group("/chats")
 	chatRoutes.Post("/", h.CreateChat)
