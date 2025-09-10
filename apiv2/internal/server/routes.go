@@ -22,13 +22,15 @@ func (s *FiberServer) RegisterFiberRoutes() {
 	cs := store.NewChatStore(db)
 	ms := store.NewMessageStore(db)
 	us := store.NewUserStore(db)
-	h := handlers.New(*cs, *ms, *us)
+	ps := store.NewPostStore(db)
+	h := handlers.New(cs, ms, us, ps)
 
 	//auth routes
 	s.Post("/signin", h.SigninHandler)
 	s.Post("/signup", h.SignupHandler)
 	s.Get("/oauth/google", h.GoogleAuthHandler)
 	s.Get("/oauth/redirect", h.GoogleAuthRedirectHandler)
+
 	//chat routes
 	chatRoutes := s.Group("/chats")
 	chatRoutes.Post("/", h.OptionalAuthMiddleware(), h.CreateChat)
@@ -36,4 +38,8 @@ func (s *FiberServer) RegisterFiberRoutes() {
 	// protected
 	chatRoutes.Get("/", h.AuthMiddleware(), h.GetChats)
 
+	// comunity post routes
+	postRoutes := s.Group("/posts")
+	postRoutes.Get("/", h.GetPosts)
+	postRoutes.Get("/:postId", h.GetPost)
 }
