@@ -2,6 +2,7 @@ package store
 
 import (
 	"apiv2/internal/models"
+	"apiv2/utils"
 	"errors"
 	"fmt"
 	"math"
@@ -22,7 +23,7 @@ func (cs ChatStore) GetChats(page int, limit int, userId uint) ([]models.Chat, i
 		return nil, 0, fmt.Errorf("error counting chats: %s", err)
 	}
 
-	offset := (page - 1) * limit
+	offset := utils.GetOffset(page, limit)
 	err := cs.db.Limit(limit).Offset(offset).Where("user_id = ? ", userId).Find(&chats).Error
 	if err != nil {
 		return nil, 0, fmt.Errorf("error fetching chats: %s", err)
