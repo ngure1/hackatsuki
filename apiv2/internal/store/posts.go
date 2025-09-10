@@ -13,6 +13,20 @@ type PostStore struct {
 	db *gorm.DB
 }
 
+// LikePost implements posts.Store.
+func (ps *PostStore) LikePost(postId uint, userId uint) error {
+	like := &models.Like{
+		PostId: postId,
+		UserID: userId,
+	}
+	err := ps.db.Create(like).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // CreatePost implements posts.Store.
 func (ps *PostStore) CreatePost(
 	question string,

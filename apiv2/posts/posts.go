@@ -8,4 +8,5 @@ type Store interface {
 	GetPost(uint) (*models.Post, error)
 
 	CreatePost(string, string, uint, *string, *string) (*models.Post, error)
+	LikePost(uint, uint) error
 }

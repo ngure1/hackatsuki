@@ -42,6 +42,9 @@ func (s *FiberServer) RegisterFiberRoutes() {
 	// comunity post routes
 	postRoutes := s.Group("/posts")
 	postRoutes.Get("/", h.GetPosts)
-	postRoutes.Post("/", h.CreatePost)
 	postRoutes.Get("/:postId", h.GetPost)
+	//protected
+	postRoutes.Post("/", h.AuthMiddleware(), h.CreatePost)
+	postRoutes.Post("/:postId/likes", h.LikePost)
+
 }

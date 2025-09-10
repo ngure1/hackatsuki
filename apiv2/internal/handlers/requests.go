@@ -23,3 +23,7 @@ type SignUpRequest struct {
 	Password  string `json:"password"`
 	// PhoneNumber *string `json:"phone_number"`
 }
+
+type LikePostRequest struct {
+	PostId uint `json:"post_id"`
+}

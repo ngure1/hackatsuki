@@ -87,3 +87,19 @@ func (h *Handler) CreatePost(c *fiber.Ctx) error {
 	}
 	return c.Status(fiber.StatusCreated).JSON(post)
 }
+
+func (h *Handler) LikePost(c *fiber.Ctx) error {
+	userId := c.Locals("userId").(uint)
+	body := new(LikePostRequest)
+
+	c.BodyParser(body)
+
+	err := h.postsStore.LikePost(body.PostId, userId)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
+			"message": "Failed to like post",
+			"error":   err.Error(),
+		})
+	}
+	return c.SendStatus(fiber.StatusOK)
+}
