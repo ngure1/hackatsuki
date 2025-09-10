@@ -17,6 +17,7 @@ func (s *FiberServer) RegisterFiberRoutes() {
 		AllowCredentials: false, // credentials require explicit origins
 		MaxAge:           300,
 	}))
+	s.App.Static("/public", "./media")
 
 	db := database.New()
 	cs := store.NewChatStore(db)
@@ -41,5 +42,6 @@ func (s *FiberServer) RegisterFiberRoutes() {
 	// comunity post routes
 	postRoutes := s.Group("/posts")
 	postRoutes.Get("/", h.GetPosts)
+	postRoutes.Post("/", h.CreatePost)
 	postRoutes.Get("/:postId", h.GetPost)
 }

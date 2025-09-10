@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -51,7 +53,37 @@ func (h *Handler) GetPost(c *fiber.Ctx) error {
 			"error":   err.Error(),
 		})
 	}
-	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
-		"post": post,
-	})
+	return c.Status(fiber.StatusOK).JSON(post)
+}
+
+func (h *Handler) CreatePost(c *fiber.Ctx) error {
+	userId := c.Locals("userId").(uint)
+
+	file, _ := c.FormFile("image")
+	var imageUrl string
+	if file != nil {
+		c.SaveFile(file, fmt.Sprintf("%s%s", FilePath, file.Filename))
+		imageUrl = fmt.Sprintf("%s:%s/%s/%s", os.Getenv("BACKEND_URL"), os.Getenv("PORT"), FilePath, file.Filename)
+	}
+
+	question := c.FormValue("question")
+	description := c.FormValue("description")
+	crop := c.FormValue("crop")
+
+	if question == "" || description == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
+			"message": "Question or description cannot be empty",
+			"error":   "Bad request received empty question or description",
+		})
+	}
+
+	post, err := h.postsStore.CreatePost(question, description, userId, &crop, &imageUrl)
+
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
+			"message": "Failed to create your post",
+			"error":   err.Error(),
+		})
+	}
+	return c.Status(fiber.StatusCreated).JSON(post)
 }

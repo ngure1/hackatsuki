@@ -13,6 +13,29 @@ type PostStore struct {
 	db *gorm.DB
 }
 
+// CreatePost implements posts.Store.
+func (ps *PostStore) CreatePost(
+	question string,
+	description string,
+	userId uint,
+	crop *string,
+	imageUrl *string,
+) (*models.Post, error) {
+	post := &models.Post{
+		Question:    question,
+		Description: description,
+		Crop:        crop,
+		ImageUrl:    imageUrl,
+		UserID:      userId,
+	}
+	err := ps.db.Create(post).Error
+	if err != nil {
+		return nil, fmt.Errorf("error creating post: %s", err.Error())
+	}
+
+	return post, nil
+}
+
 // GetPost implements posts.Store.
 func (ps *PostStore) GetPost(postId uint) (*models.Post, error) {
 	var post models.Post
