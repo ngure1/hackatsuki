@@ -38,9 +38,6 @@ func (ps *PostStore) GetPosts(page int, limit int) ([]models.Post, int, error) {
 
 	offset := utils.GetOffset(page, limit)
 	err := ps.db.Limit(limit).Offset(offset).Find(&posts).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, 0, err
-	}
 
 	if err != nil {
 		return nil, 0, fmt.Errorf("an unexpected error occured when retrieving paginated posts: %s", err.Error())
