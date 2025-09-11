@@ -10,4 +10,6 @@ type Store interface {
 	CreatePost(question string, description string, userId uint, crop *string, imageUrl *string) (*models.Post, error)
 	LikePost(postId uint, userId uint) error
 	CreateComment(content string, postId uint, userId uint, parentCommentId *uint) (*models.Comment, error)
+	GetComments(postId uint, page int, limit int) ([]models.Comment, int, error)
+	GetCommentReplies(commentId uint, page int, limit int) ([]models.Comment, int, error)
 }

@@ -13,6 +13,48 @@ type PostStore struct {
 	db *gorm.DB
 }
 
+// GetCommentReplies implements posts.Store.
+func (ps *PostStore) GetCommentReplies(commentId uint, page int, limit int) ([]models.Comment, int, error) {
+	var comments []models.Comment
+	var totalCount int64
+	err := ps.db.Model(&models.Comment{}).Where("parent_comment_id = ?", commentId).Count(&totalCount).Error
+	if err != nil {
+		return nil, 0, fmt.Errorf("an unexpected error occured when counting comment replies: %s", err.Error())
+	}
+
+	offset := utils.GetOffset(page, limit)
+	err = ps.db.Limit(limit).Offset(offset).Where("parent_comment_id = ?", commentId).Find(&comments).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, 0, err
+	}
+	if err != nil {
+		return nil, 0, fmt.Errorf("an unexpected error occured when querying comment replies: %s", err.Error())
+	}
+
+	return comments, int(totalCount), nil
+}
+
+// GetComments implements posts.Store.
+func (ps *PostStore) GetComments(postId uint, page int, limit int) ([]models.Comment, int, error) {
+	var comments []models.Comment
+	var totalCount int64
+	err := ps.db.Model(&models.Comment{}).Where("post_id = ?", postId).Count(&totalCount).Error
+	if err != nil {
+		return nil, 0, fmt.Errorf("an unexpected error occured when counting comments: %s", err.Error())
+	}
+
+	offset := utils.GetOffset(page, limit)
+	err = ps.db.Limit(limit).Offset(offset).Where("post_id = ?", postId).Find(&comments).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, 0, err
+	}
+	if err != nil {
+		return nil, 0, fmt.Errorf("an unexpected error occured when querying comments: %s", err.Error())
+	}
+
+	return comments, int(totalCount), nil
+}
+
 // CreateComment implements posts.Store.
 func (ps *PostStore) CreateComment(
 	content string,

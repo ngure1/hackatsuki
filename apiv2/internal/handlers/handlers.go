@@ -7,6 +7,13 @@ import (
 	"apiv2/user"
 )
 
+const (
+	postsPerPage    = 6
+	chatsPerPage    = 10
+	commentsPerPage = 4
+	repliesPerPage  = 3
+)
+
 type Handler struct {
 	chatStore     chat.Store
 	messagesStore messages.Store

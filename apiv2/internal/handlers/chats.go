@@ -6,7 +6,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-const chatsPerPage = 10
 
 func (h *Handler) CreateChat(c *fiber.Ctx) error {
 	userId, ok := c.Locals("userId").(uint)

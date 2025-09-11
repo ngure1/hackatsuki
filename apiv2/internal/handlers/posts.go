@@ -10,8 +10,6 @@ import (
 	"gorm.io/gorm"
 )
 
-const postsPerPage = 6
-
 func (h *Handler) GetPosts(c *fiber.Ctx) error {
 	page := c.QueryInt("page", 1)
 	posts, totalPages, err := h.postsStore.GetPosts(page, postsPerPage)
