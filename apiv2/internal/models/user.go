@@ -23,4 +23,5 @@ type User struct {
 
 	// relations
 	Chats []Chat `json:"chats"`
+	Post  []Post `json:"posts"`
 }

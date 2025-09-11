@@ -7,4 +7,5 @@ type Store interface {
 	GetChatById(uint) error
 	// limit and offset
 	GetChatMessages(uint) ([]models.Message, error)
+	GetChats(int, int, uint) ([]models.Chat, int, error)
 }

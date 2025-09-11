@@ -23,3 +23,12 @@ type SignUpRequest struct {
 	Password  string `json:"password"`
 	// PhoneNumber *string `json:"phone_number"`
 }
+
+type LikePostRequest struct {
+	PostId uint `json:"post_id"`
+}
+
+type CreateCommentRequest struct {
+	Content         string `json:"content"`
+	ParentCommentId *uint  `json:"parent_comment_id,omitempty"`
+}
