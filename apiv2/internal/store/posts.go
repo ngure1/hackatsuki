@@ -13,6 +13,27 @@ type PostStore struct {
 	db *gorm.DB
 }
 
+// CreateComment implements posts.Store.
+func (ps *PostStore) CreateComment(
+	content string,
+	postId uint,
+	userId uint,
+	parentCommentId *uint,
+) (*models.Comment, error) {
+	comment := &models.Comment{
+		Content:         content,
+		PostId:          postId,
+		UserID:          userId,
+		ParentCommentId: parentCommentId,
+	}
+	err := ps.db.Create(comment).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return comment, nil
+}
+
 // LikePost implements posts.Store.
 func (ps *PostStore) LikePost(postId uint, userId uint) error {
 	like := &models.Like{

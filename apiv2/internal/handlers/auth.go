@@ -53,6 +53,7 @@ func (h *Handler) SigninHandler(c *fiber.Ctx) error {
 
 func (h *Handler) SignupHandler(c *fiber.Ctx) error {
 	body := new(SignUpRequest)
+	// todo : imrove error handling here
 	if err := c.BodyParser(body); err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
