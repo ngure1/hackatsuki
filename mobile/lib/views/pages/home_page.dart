@@ -1,12 +1,12 @@
 import "package:dotted_border/dotted_border.dart";
 import "package:flutter/material.dart";
 import "package:mobile/providers/image_provider.dart";
+import "package:mobile/providers/navigation_provider.dart";
 import "package:mobile/theme.dart";
 import "package:mobile/views/widgets/appbar_widget.dart";
 import "package:mobile/views/widgets/custom_container_widget.dart";
 import "package:mobile/views/widgets/custom_text_field_widget.dart";
 import "package:mobile/views/widgets/image_source_dialogue_widget.dart";
-import "package:mobile/views/widgets/navbar_widget.dart";
 import "package:mobile/views/widgets/navigation_container_widget.dart";
 import "package:mobile/views/widgets/recent_activity_card_widget.dart";
 import "package:mobile/views/widgets/stat_card_widget.dart";
@@ -20,7 +20,8 @@ class HomePage extends StatelessWidget {
 
     showDialog(
       context: context,
-      builder: (context) => ImageSourceDialogueWidget(imageProvider: imageProvider),
+      builder: (context) =>
+          ImageSourceDialogueWidget(imageProvider: imageProvider),
     );
   }
 
@@ -30,7 +31,6 @@ class HomePage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppbarWidget(),
-      bottomNavigationBar: NavbarWidget(),
       body: SingleChildScrollView(
         child: Container(
           decoration: BoxDecoration(gradient: AppTheme.homePageGradient),
@@ -81,7 +81,8 @@ class HomePage extends StatelessWidget {
                     children: [
                       //TODO: Refactor the first child of this grid
                       NavigationContainerWidget(
-                        onTap: () => imageProvider.handleCameraSelection(context),
+                        onTap: () =>
+                            imageProvider.handleCameraSelection(context),
                         icon: 'assets/images/camera_shutter_icon.png',
                         title: 'Scan Plant',
                         description:
@@ -94,13 +95,13 @@ class HomePage extends StatelessWidget {
                         description: 'Describe what you see on your plant',
                       ),
                       NavigationContainerWidget(
-                        onTap: () {},
+                        onTap: () => context.read<NavigationProvider>().selectPage(1),
                         icon: 'assets/images/message_icon.png',
                         title: 'Ask Expert',
                         description: 'Chat with AI plant specialist',
                       ),
                       NavigationContainerWidget(
-                        onTap: () {},
+                        onTap: () => context.read<NavigationProvider>().selectPage(2),
                         icon: 'assets/images/people_icon.png',
                         title: 'Community',
                         description: 'Get help from plant lovers',
@@ -173,7 +174,8 @@ class HomePage extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             TextButton(
-                              onPressed: () => imageProvider.handleCameraSelection(context),
+                              onPressed: () =>
+                                  imageProvider.handleCameraSelection(context),
                               style: TextButton.styleFrom(
                                 backgroundColor: AppTheme.green3,
                               ),
@@ -196,7 +198,8 @@ class HomePage extends StatelessWidget {
                             ),
                             SizedBox(width: 5.0),
                             TextButton(
-                              onPressed: ()=> imageProvider.handleGallerySelection(context),
+                              onPressed: () =>
+                                  imageProvider.handleGallerySelection(context),
                               style: TextButton.styleFrom(
                                 backgroundColor: AppTheme.gray1,
                               ),
@@ -338,5 +341,3 @@ class HomePage extends StatelessWidget {
     );
   }
 }
-
-
