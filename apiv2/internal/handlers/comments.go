@@ -54,7 +54,6 @@ func (h *Handler) GetComments(c *fiber.Ctx) error {
 		})
 	}
 
-	// todo : add replies count
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 		"comments":   comments,
 		"totalPages": totalPages,
