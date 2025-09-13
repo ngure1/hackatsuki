@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"apiv2/requests"
 	"errors"
 	"strings"
 
@@ -11,7 +12,7 @@ import (
 func (h *Handler) CommentOnPost(c *fiber.Ctx) error {
 	postId, _ := c.ParamsInt("postId")
 	userId := c.Locals("userId").(uint)
-	body := new(CreateCommentRequest)
+	body := new(requests.CreateCommentRequest)
 	if err := c.BodyParser(body); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
 			"message": "Something went wrong",

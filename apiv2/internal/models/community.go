@@ -12,9 +12,9 @@ type Post struct {
 	Crop        *string `json:"crop,omitempty"`
 	ImageUrl    *string `json:"image_url"`
 
-	UserID   uint `json:"user_id" gorm:"index"`
-	Comments []Comment
-	Likes    []Like
+	UserID   uint      `json:"user_id" gorm:"index"`
+	Comments []Comment `json:"-"`
+	Likes    []Like    `json:"-"`
 }
 
 // comments
@@ -25,7 +25,7 @@ type Comment struct {
 	ParentCommentId *uint     `json:"parent_comment_id"`
 	PostId          uint      `json:"post_id"           gorm:"index"`
 	UserID          uint      `json:"user_id"`
-	Replies         []Comment `json:"replies"           gorm:"foreignkey:ParentCommentId"`
+	Replies         []Comment `json:"-"                 gorm:"foreignkey:ParentCommentId"`
 }
 
 // like

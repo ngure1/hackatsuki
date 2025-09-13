@@ -1,4 +1,4 @@
-package handlers
+package requests
 
 type DiagnosisRequest struct {
 	Image  string `json:"image"`

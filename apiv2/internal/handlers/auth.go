@@ -3,6 +3,7 @@ package handlers
 import (
 	"apiv2/auth"
 	"apiv2/internal/models"
+	"apiv2/requests"
 	"errors"
 
 	"github.com/gofiber/fiber/v2"
@@ -11,7 +12,7 @@ import (
 )
 
 func (h *Handler) SigninHandler(c *fiber.Ctx) error {
-	body := new(SigninRequest)
+	body := new(requests.SigninRequest)
 
 	if err := c.BodyParser(body); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
@@ -52,7 +53,7 @@ func (h *Handler) SigninHandler(c *fiber.Ctx) error {
 }
 
 func (h *Handler) SignupHandler(c *fiber.Ctx) error {
-	body := new(SignUpRequest)
+	body := new(requests.SignUpRequest)
 	// todo : imrove error handling here
 	if err := c.BodyParser(body); err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)

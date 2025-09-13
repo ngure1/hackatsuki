@@ -21,6 +21,7 @@ func (h *Handler) GetPosts(c *fiber.Ctx) error {
 		})
 	}
 
+	// todo add likes count and comment counts and is liked by the current user per post
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 		"posts":       posts,
 		"total_pages": totalPages,
