@@ -2,6 +2,7 @@ package models
 
 import "gorm.io/gorm"
 
+// todo: make all assosiacions like comments likes replies etc ..json empty
 // post
 type Post struct {
 	gorm.Model

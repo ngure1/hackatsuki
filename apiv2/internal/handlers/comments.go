@@ -2,14 +2,13 @@ package handlers
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/log"
 	"gorm.io/gorm"
 )
 
 func (h *Handler) CommentOnPost(c *fiber.Ctx) error {
-	// todo: confirm this error handling
 	postId, _ := c.ParamsInt("postId")
 	userId := c.Locals("userId").(uint)
 	body := new(CreateCommentRequest)
@@ -20,7 +19,12 @@ func (h *Handler) CommentOnPost(c *fiber.Ctx) error {
 		})
 	}
 
-	log.Info(body)
+	if strings.Trim(body.Content, " ") == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
+			"message": "Comment cannot be empty",
+			"error":   "received emtpy comment body",
+		})
+	}
 
 	comment, err := h.postsStore.CreateComment(body.Content, uint(postId), uint(userId), body.ParentCommentId)
 	if err != nil {

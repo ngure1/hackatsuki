@@ -58,10 +58,11 @@ func (h *Handler) CreatePost(c *fiber.Ctx) error {
 	userId := c.Locals("userId").(uint)
 
 	file, _ := c.FormFile("image")
-	var imageUrl string
+	var imageUrl *string = nil
 	if file != nil {
 		c.SaveFile(file, fmt.Sprintf("%s%s", FilePath, file.Filename))
-		imageUrl = fmt.Sprintf("%s:%s/%s/%s", os.Getenv("BACKEND_URL"), os.Getenv("PORT"), FilePath, file.Filename)
+		urlString := fmt.Sprintf("%s:%s/public/%s", os.Getenv("BACKEND_URL"), os.Getenv("PORT"), file.Filename)
+		imageUrl = &urlString
 	}
 
 	question := c.FormValue("question")
@@ -75,7 +76,7 @@ func (h *Handler) CreatePost(c *fiber.Ctx) error {
 		})
 	}
 
-	post, err := h.postsStore.CreatePost(question, description, userId, &crop, &imageUrl)
+	post, err := h.postsStore.CreatePost(question, description, userId, &crop, imageUrl)
 
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
@@ -88,11 +89,9 @@ func (h *Handler) CreatePost(c *fiber.Ctx) error {
 
 func (h *Handler) LikePost(c *fiber.Ctx) error {
 	userId := c.Locals("userId").(uint)
-	body := new(LikePostRequest)
+	postId, _ := c.ParamsInt("postId")
 
-	c.BodyParser(body)
-
-	err := h.postsStore.LikePost(body.PostId, userId)
+	err := h.postsStore.LikePost(uint(postId), userId)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
 			"message": "Failed to like post",
