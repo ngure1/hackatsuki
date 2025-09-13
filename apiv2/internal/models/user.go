@@ -14,11 +14,12 @@ import "gorm.io/gorm"
 
 type User struct {
 	gorm.Model
-	FirstName    string  `json:"first_name"`
-	LastName     string  `json:"last_name"`
-	Email        *string `json:"email"        gorm:"unique;index"`
-	PhoneNumber  *string `json:"phone_number" gorm:"unique;index"`
-	PasswordHash string  `json:"-"`
+	FirstName     string  `json:"first_name"`
+	LastName      string  `json:"last_name"`
+	Email         *string `json:"email"           gorm:"unique;index"`
+	PhoneNumber   *string `json:"phone_number"    gorm:"unique;index"`
+	PasswordHash  *string `json:"-"`
+	IsPasswordSet *bool   `json:"is_password_set" gorm:"default:true"`
 
 	// relations
 	Chats []Chat `json:"chats"`
