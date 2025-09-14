@@ -11,32 +11,35 @@ class BlogFilterNavWidget extends StatelessWidget {
 
     final blogFilter = context.watch<BlogFilterProvider>();
 
-    return Row(
-      children: [
-        BlogFilterButtonWidget(
-          onTap: () => context.read<BlogFilterProvider>().setFilter('All'),
-          buttonText: 'All',
-          isSelected: blogFilter.selectedFilter == 'All',
-        ),
-        SizedBox(width: 10.0),
-        BlogFilterButtonWidget(
-          onTap: () => context.read<BlogFilterProvider>().setFilter('Diseases'),
-          buttonText: 'Diseases',
-          isSelected: blogFilter.selectedFilter == 'Diseases',
-        ),
-        SizedBox(width: 10.0),
-        BlogFilterButtonWidget(
-          onTap: () => context.read<BlogFilterProvider>().setFilter('Pests'),
-          buttonText: 'Pests',
-          isSelected: blogFilter.selectedFilter == 'Pests',
-        ),
-        SizedBox(width: 10.0),
-        BlogFilterButtonWidget(
-          onTap: () => context.read<BlogFilterProvider>().setFilter('Care Tips'),
-          buttonText: 'Care Tips',
-          isSelected: blogFilter.selectedFilter == 'Care Tips',
-        ),
-      ],
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          BlogFilterButtonWidget(
+            onTap: () => context.read<BlogFilterProvider>().setFilter('All'),
+            buttonText: 'All',
+            isSelected: blogFilter.selectedFilter == 'All',
+          ),
+          SizedBox(width: 10.0),
+          BlogFilterButtonWidget(
+            onTap: () => context.read<BlogFilterProvider>().setFilter('Diseases'),
+            buttonText: 'Diseases',
+            isSelected: blogFilter.selectedFilter == 'Diseases',
+          ),
+          SizedBox(width: 10.0),
+          BlogFilterButtonWidget(
+            onTap: () => context.read<BlogFilterProvider>().setFilter('Pests'),
+            buttonText: 'Pests',
+            isSelected: blogFilter.selectedFilter == 'Pests',
+          ),
+          SizedBox(width: 10.0),
+          BlogFilterButtonWidget(
+            onTap: () => context.read<BlogFilterProvider>().setFilter('Care Tips'),
+            buttonText: 'Care Tips',
+            isSelected: blogFilter.selectedFilter == 'Care Tips',
+          ),
+        ],
+      ),
     );
   }
 }

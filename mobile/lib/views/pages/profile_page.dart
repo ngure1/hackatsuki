@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/theme.dart';
 import 'package:mobile/views/widgets/appbar_widget.dart';
-import 'package:mobile/views/widgets/blog_filter_button_widget.dart';
 import 'package:mobile/views/widgets/blog_filter_nav_widget.dart';
 import 'package:mobile/views/widgets/custom_container_widget.dart';
 

@@ -1,5 +1,6 @@
 import "package:dotted_border/dotted_border.dart";
 import "package:flutter/material.dart";
+import "package:mobile/navigation/app_navigator.dart";
 import "package:mobile/providers/image_provider.dart";
 import "package:mobile/providers/navigation_provider.dart";
 import "package:mobile/theme.dart";
@@ -52,10 +53,7 @@ class HomePage extends StatelessWidget {
           );
           Navigator.pop(dialogContext);
           context.read<NavigationProvider>().selectPage(1);
-          Navigator.of(
-            context,
-            rootNavigator: false,
-          ).pushReplacementNamed('/chat');
+          AppNavigator.navigatorKey.currentState?.pushReplacementNamed('/chat');
         },
       ),
     );
@@ -137,15 +135,21 @@ class HomePage extends StatelessWidget {
                         description: 'Describe what you see on your plant',
                       ),
                       NavigationContainerWidget(
-                        onTap: () =>
-                            context.read<NavigationProvider>().selectPage(1),
+                        onTap: () {
+                          context.read<NavigationProvider>().selectPage(1);
+                          AppNavigator.navigatorKey.currentState
+                              ?.pushReplacementNamed('/chat');
+                        },
                         icon: 'assets/images/message_icon.png',
                         title: 'Ask Expert',
                         description: 'Chat with AI plant specialist',
                       ),
                       NavigationContainerWidget(
-                        onTap: () =>
-                            context.read<NavigationProvider>().selectPage(2),
+                        onTap: () {
+                          context.read<NavigationProvider>().selectPage(2);
+                          AppNavigator.navigatorKey.currentState
+                              ?.pushReplacementNamed('/community');
+                        },
                         icon: 'assets/images/people_icon.png',
                         title: 'Community',
                         description: 'Get help from plant lovers',

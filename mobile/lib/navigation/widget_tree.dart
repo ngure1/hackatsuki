@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/navigation/app_navigator.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile/providers/navigation_provider.dart';
 import 'package:mobile/views/pages/home_page.dart';
@@ -15,9 +16,6 @@ class WidgetTree extends StatefulWidget {
 }
 
 class _WidgetTreeState extends State<WidgetTree> {
-  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
-
-  // Create routes for each page
   Route<dynamic> _generateRoute(RouteSettings settings) {
     Widget page;
     
@@ -91,7 +89,7 @@ class _WidgetTreeState extends State<WidgetTree> {
     nav.selectPage(index);
     
     final route = _getRouteFromIndex(index);
-    _navigatorKey.currentState?.pushReplacementNamed(route);
+    AppNavigator.navigatorKey.currentState?.pushReplacementNamed(route);
   }
 
   @override
@@ -100,7 +98,7 @@ class _WidgetTreeState extends State<WidgetTree> {
       builder: (context, nav, child) {
         return Scaffold(
           body: Navigator(
-            key: _navigatorKey,
+            key: AppNavigator.navigatorKey,
             initialRoute: '/home',
             onGenerateRoute: _generateRoute,
           ),
