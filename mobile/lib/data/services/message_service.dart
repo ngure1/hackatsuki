@@ -8,7 +8,7 @@ import 'package:mobile/data/utils.dart';
 class MessageService {
   final ChatService _chatService = ChatService();
 
-  Future<Message> sendMessage(Message message) async {
+  Stream<Message> sendMessageStream(Message message) async* {
     String? chatId = message.chatId;
 
     if (chatId == null || chatId.isEmpty) {
@@ -29,24 +29,21 @@ class MessageService {
     }
 
     final streamedResponse = await request.send();
-    final response = await http.Response.fromStream(streamedResponse);
 
-    print("➡️ Multipart fields: ${request.fields}");
-    if (message.image != null) {
-      print("➡️ Multipart file: ${message.image!.path}");
-    }
-    print("⬅️ Status: ${response.statusCode}");
-    print("⬅️ Body: ${response.body}");
-
-    if (response.statusCode != 200) {
-      throw Exception('Failed to send message (status ${response.statusCode})');
+    if (streamedResponse.statusCode != 200) {
+      throw Exception(
+        'Failed to send message; ${streamedResponse.statusCode})',
+      );
     }
 
-    final data = jsonDecode(response.body);
+    final stream = streamedResponse.stream.transform(utf8.decoder);
 
-    return Message.aiResponse(
-      data['text'] ?? "No response",
-      imageUrl: data['imageUrl'],
-    );
+    String buffer = '';
+    await for (final chunk in stream) {
+      for (final char in chunk.split('')) {
+        buffer += char;
+        yield Message.aiResponse(buffer);
+      }
+    }
   }
 }

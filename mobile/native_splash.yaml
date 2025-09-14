@@ -1,0 +1,11 @@
+flutter_native_splash:
+  android: true
+  ios: true
+  web: false
+
+  color: '#22c55e'
+  branding: 'assets/images/aigow_text.png'
+
+  android_12:
+    color: '#22c55e'
+    branding: 'assets/images/aigow_text.png'

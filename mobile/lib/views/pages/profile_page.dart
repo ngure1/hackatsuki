@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/theme.dart';
 import 'package:mobile/views/widgets/appbar_widget.dart';
+import 'package:mobile/views/widgets/blog_filter_nav_widget.dart';
 import 'package:mobile/views/widgets/custom_container_widget.dart';
 
 class ProfilePage extends StatelessWidget {
@@ -70,17 +71,60 @@ class ProfilePage extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Image.asset('assets/images/plant_leaf.png', height: 20, width: 20,),
+                        Image.asset(
+                          'assets/images/plant_leaf.png',
+                          height: 20,
+                          width: 20,
+                        ),
 
-                        Text('About Me', style: AppTheme.labelLarge.copyWith(color: AppTheme.green2),),
+                        Text(
+                          'About Me',
+                          style: AppTheme.labelLarge.copyWith(
+                            color: AppTheme.green2,
+                          ),
+                        ),
                       ],
                     ),
-                    SizedBox(height: 8.0,),
-                    Text("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.", textAlign: TextAlign.justify,style: AppTheme.bodySmall.copyWith(color: AppTheme.textGray),)
+                    SizedBox(height: 8.0),
+                    Text(
+                      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+                      textAlign: TextAlign.justify,
+                      style: AppTheme.bodyMedium.copyWith(
+                        color: AppTheme.buttonTextColor,
+                      ),
+                    ),
                   ],
                 ),
               ),
-              CustomContainerWidget(color: AppTheme.white, horizontalPadding: 16.0, verticalPadding: 16.0, child: Column(),)
+              SizedBox(height: 16.0),
+              CustomContainerWidget(
+                color: AppTheme.white,
+                horizontalPadding: 16.0,
+                verticalPadding: 16.0,
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.note_add),
+                            Text(
+                              'My Posts',
+                              style: AppTheme.titleMedium.copyWith(
+                                color: AppTheme.green1,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: BlogFilterNavWidget())
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -112,6 +156,7 @@ class UserStatsWidget extends StatelessWidget {
           style: AppTheme.labelSmall.copyWith(color: AppTheme.textGray),
         ),
       ],
+
     );
   }
 }

@@ -15,27 +15,43 @@ class MessageProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final aiMessage = await _service.sendMessage(userMessage);
-      _messages.add(aiMessage);
-      notifyListeners();
+      Message? aiMessage;
+      await for (final partial in _service.sendMessageStream(userMessage)) {
+        if (aiMessage == null) {
+          aiMessage = partial;
+          _messages.add(aiMessage);
+        } else {
+          final lastIndex = _messages.length - 1;
+          aiMessage = aiMessage.copyWith(text: partial.text);
+          _messages[lastIndex] = aiMessage;
+        }
+        notifyListeners();
+        await Future.delayed(const Duration(microseconds: 500));
+      }
     } catch (e) {
       print(e);
     }
   }
 
-  String prepareInitialMessage(ImageProviderNotifier imageProvider) {
-    if (imageProvider.selectedImage != null) {
-      final plantDetails = imageProvider.getFormattedPlantDetails();
-
-      String initialMessage =
-          "Please analyze this plant image for any diseases or issues.";
-
-      if (plantDetails.isNotEmpty) {
-        initialMessage += "\n\nAdditional details:\n$plantDetails";
-      }
-
-      return initialMessage;
+  String getPrefilledMessage(ImageProviderNotifier imageProvider) {
+    if (imageProvider.selectedImage == null &&
+        imageProvider.getFormattedPlantDetails().isEmpty) {
+      return "";
     }
-    return "";
+
+    final buffer = StringBuffer();
+
+    buffer.writeln(
+      "Please analyze this plant image for any diseases or issues.",
+    );
+
+    final details = imageProvider.getFormattedPlantDetails();
+    if (details.isNotEmpty) {
+      buffer.writeln();
+      buffer.writeln("Additional details:");
+      buffer.writeln(details);
+    }
+
+    return buffer.toString();
   }
 }

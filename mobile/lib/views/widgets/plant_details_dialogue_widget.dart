@@ -103,7 +103,7 @@ class _PlantDetailsDialogueWidgetState
               ),
               SizedBox(height: 8.0),
               DropdownButtonFormField(
-                value: selectedPlantPart,
+                initialValue: selectedPlantPart,
                 decoration: InputDecoration(
                   hintText: 'Select plant part',
                   hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.gray3),
@@ -142,25 +142,21 @@ class _PlantDetailsDialogueWidgetState
                     'Describe what you observe i.e. colors, patterns, timing, etc',
               ),
               SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => widget.onSave(null, null, null),
-                    child: Text('Skip'),
+              
+                  Align(
+                    alignment: AlignmentGeometry.centerRight,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        widget.onSave(
+                          _plantNameController.text.trim().isEmpty ? null : _plantNameController.text.trim(),
+                          selectedPlantPart,
+                          _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
+                        );
+                      },
+                      child: Text('Continue'),
+                    ),
                   ),
-                  ElevatedButton(
-                    onPressed: () {
-                      widget.onSave(
-                        _plantNameController.text.trim().isEmpty ? null : _plantNameController.text.trim(),
-                        selectedPlantPart,
-                        _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
-                      );
-                    },
-                    child: Text('Continue'),
-                  ),
-                ],
-              ),
+                
             ],
           ),
         ),
