@@ -6,10 +6,10 @@ class CustomContainerWidget extends StatelessWidget {
     required this.color,
     this.width,
     this.height,
-    required this.child,
     required this.horizontalPadding,
     required this.verticalPadding,
-    this.border
+    this.border,
+    required this.child,
   });
 
   final Color color;

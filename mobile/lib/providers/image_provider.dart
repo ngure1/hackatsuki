@@ -1,9 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:mobile/data/services/image_service.dart';
-import 'package:mobile/providers/navigation_provider.dart';
-import 'package:mobile/views/widgets/plant_details_dialogue_widget.dart';
-import 'package:provider/provider.dart';
 
 class ImageProviderNotifier extends ChangeNotifier {
   final ImageService _service = ImageService();
@@ -18,40 +15,22 @@ class ImageProviderNotifier extends ChangeNotifier {
   String? get plantPart => _plantPart;
   String? get description => _description;
 
-  Future<void> handleCameraSelection(BuildContext context) async {
-    _selectedImage = await _service.pickFromCamera();
-    if (_selectedImage != null) {
-      _showPlantDetailsDialog(context);
+  Future<File?> pickFromCamera() async {
+    final file = await _service.pickFromCamera();
+    if (file != null) {
+      _selectedImage = file;
+      notifyListeners();
     }
-    notifyListeners();
+    return file;
   }
 
-  Future<void> handleGallerySelection(BuildContext context) async {
-    _selectedImage = await _service.pickFromGallery();
-    if (_selectedImage != null) {
-      _showPlantDetailsDialog(context);
+  Future<File?> pickFromGallery() async {
+    final file = await _service.pickFromGallery();
+    if (file != null) {
+      _selectedImage = file;
+      notifyListeners();
     }
-    notifyListeners();
-  }
-
-  void _showPlantDetailsDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => PlantDetailsDialogueWidget(
-        initialPlantName: _plantName,
-        initialPlantPart: _plantPart,
-        initialDescription: _description,
-        onSave: (plantName, plantPart, description) {
-          setPlantDetails(
-            plantName: plantName,
-            plantPart: plantPart,
-            description: description,
-          );
-          Navigator.pop(context);
-          context.read<NavigationProvider>().selectPage(1);
-        },
-      ),
-    );
+    return file;
   }
 
   void setPlantDetails({
@@ -65,7 +44,7 @@ class ImageProviderNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
-  void clearImageDescription() {
+  void clear() {
     _selectedImage = null;
     _plantName = null;
     _plantPart = null;
@@ -75,9 +54,9 @@ class ImageProviderNotifier extends ChangeNotifier {
 
   String getFormattedPlantDetails() {
     final details = <String>[];
-    if (_plantName != null) details.add('Plant: $_plantName');
-    if (_plantPart != null) details.add('Part: $_plantPart');
-    if (_description != null) details.add('Description: $_description');
+    if (_plantName?.isNotEmpty ?? false) details.add('Plant: $_plantName');
+    if (_plantPart?.isNotEmpty ?? false) details.add('Part: $_plantPart');
+    if (_description?.isNotEmpty ?? false) details.add('Description: $_description');
     return details.join('\n');
   }
 }

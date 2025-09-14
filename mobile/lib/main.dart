@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/navigation/widget_tree.dart';
+import 'package:mobile/providers/blog_filter_provider.dart';
 import 'package:mobile/providers/chat_provider.dart';
 import 'package:mobile/providers/image_provider.dart';
 import 'package:mobile/providers/message_provider.dart';
@@ -15,6 +16,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => ImageProviderNotifier()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
         ChangeNotifierProvider(create: (_) => MessageProvider()),
+        ChangeNotifierProvider(create: (_) => BlogFilterProvider()),
       ],
       child: MyApp()));
 }
@@ -28,6 +30,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         appBarTheme: AppTheme.appBarTheme,
+        navigationBarTheme: AppTheme.navigationBarTheme,
       ),
       home: WidgetTree(),
     );

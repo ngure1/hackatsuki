@@ -23,19 +23,26 @@ class MessageProvider extends ChangeNotifier {
     }
   }
 
-  String prepareInitialMessage(ImageProviderNotifier imageProvider) {
-    if (imageProvider.selectedImage != null) {
-      final plantDetails = imageProvider.getFormattedPlantDetails();
-
-      String initialMessage =
-          "Please analyze this plant image for any diseases or issues.";
-
-      if (plantDetails.isNotEmpty) {
-        initialMessage += "\n\nAdditional details:\n$plantDetails";
-      }
-
-      return initialMessage;
-    }
+  String getPrefilledMessage(ImageProviderNotifier imageProvider) {
+  if (imageProvider.selectedImage == null &&
+      imageProvider.getFormattedPlantDetails().isEmpty) {
     return "";
   }
+
+  final buffer = StringBuffer();
+
+  buffer.writeln("Please analyze this plant image for any diseases or issues.");
+
+  final details = imageProvider.getFormattedPlantDetails();
+  if (details.isNotEmpty) {
+    buffer.writeln();
+    buffer.writeln("Additional details:");
+    buffer.writeln(details);
+  }
+
+  return buffer.toString();
+}
+
+
+  
 }

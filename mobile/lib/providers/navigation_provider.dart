@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class NavigationProvider with ChangeNotifier {
+class NavigationProvider extends ChangeNotifier {
   int _selectedPage = 0;
   int get selectedPage => _selectedPage;
 
