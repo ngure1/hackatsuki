@@ -10,6 +10,15 @@ import (
 	"gorm.io/gorm"
 )
 
+// GetPosts godoc
+// @Summary List posts
+// @Description Retrieve paginated list of posts
+// @Tags Posts
+// @Produce json
+// @Param page query int false "Page number" default(1)
+// @Success 200 {object} map[string]interface{} "posts: []responses.PostResponse, total_pages: int"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /posts [get]
 func (h *Handler) GetPosts(c *fiber.Ctx) error {
 	page := c.QueryInt("page", 1)
 	posts, totalPages, err := h.postsStore.GetPosts(page, postsPerPage)
@@ -22,12 +31,24 @@ func (h *Handler) GetPosts(c *fiber.Ctx) error {
 	}
 
 	// todo add likes count and comment counts and is liked by the current user per post
+	// todo fix total pages
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 		"posts":       posts,
 		"total_pages": totalPages,
 	})
 }
 
+// GetPost godoc
+// @Summary Get a single post
+// @Description Retrieve a post by its ID
+// @Tags Posts
+// @Accept  json
+// @Produce  json
+// @Param   postId  path  int  true  "Post ID"
+// @Success 200 {object} responses.PostResponse
+// @Failure 404 {object} map[string]string "Post not found"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /posts/{postId} [get]
 func (h *Handler) GetPost(c *fiber.Ctx) error {
 	postIdStr := c.Params("postId")
 	postId, err := strconv.ParseUint(postIdStr, 10, 32)
@@ -55,6 +76,20 @@ func (h *Handler) GetPost(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(post)
 }
 
+// CreatePost godoc
+// @Summary Create a post
+// @Description Create a new post with question, description, and optional image
+// @Tags Posts
+// @Accept multipart/form-data
+// @Produce json
+// @Param question formData string true "Post question"
+// @Param description formData string true "Post description"
+// @Param crop formData string false "Crop name"
+// @Param image formData file false "Image file"
+// @Success 201 {object} responses.PostResponse
+// @Failure 400 {object} map[string]string "Bad request"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /posts [post]
 func (h *Handler) CreatePost(c *fiber.Ctx) error {
 	userId := c.Locals("userId").(uint)
 
@@ -88,6 +123,15 @@ func (h *Handler) CreatePost(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(post)
 }
 
+// LikePost godoc
+// @Summary Like a post
+// @Description Like a post by ID
+// @Tags Posts
+// @Produce json
+// @Param postId path int true "Post ID"
+// @Success 200 {string} string "ok"
+// @Failure 500 {object} map[string]string "Failed to like post"
+// @Router /posts/{postId}/likes [post]
 func (h *Handler) LikePost(c *fiber.Ctx) error {
 	userId := c.Locals("userId").(uint)
 	postId, _ := c.ParamsInt("postId")

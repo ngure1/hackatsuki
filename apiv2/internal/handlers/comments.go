@@ -9,6 +9,18 @@ import (
 	"gorm.io/gorm"
 )
 
+// CommentOnPost godoc
+// @Summary Add a comment to a post
+// @Description Creates a comment on a specific post. Supports replying to another comment if `parent_comment_id` is provided.
+// @Tags Comments
+// @Accept json
+// @Produce json
+// @Param postId path int true "Post ID"
+// @Param comment body requests.CreateCommentRequest true "Comment request body"
+// @Success 201 {object} responses.CommentsReponse
+// @Failure 400 {object} map[string]string "Invalid request"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /posts/{postId}/comments [post]
 func (h *Handler) CommentOnPost(c *fiber.Ctx) error {
 	postId, _ := c.ParamsInt("postId")
 	userId := c.Locals("userId").(uint)
@@ -37,6 +49,18 @@ func (h *Handler) CommentOnPost(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(comment)
 }
 
+// GetComments godoc
+// @Summary Get comments on a post
+// @Description Fetch paginated comments for a given post
+// @Tags Comments
+// @Accept json
+// @Produce json
+// @Param postId path int true "Post ID"
+// @Param page query int false "Page number (default 1)"
+// @Success 200 {object} map[string]interface{} "comments: []responses.CommentsReponse, totalPages: int"
+// @Failure 400 {object} map[string]string "Invalid post ID"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /posts/{postId}/comments [get]
 func (h *Handler) GetComments(c *fiber.Ctx) error {
 	postId, _ := c.ParamsInt("postId")
 	page := c.QueryInt("page", 1)
@@ -60,6 +84,18 @@ func (h *Handler) GetComments(c *fiber.Ctx) error {
 	})
 }
 
+// GetCommentReplies godoc
+// @Summary Get replies to a comment
+// @Description Fetch paginated replies for a given comment
+// @Tags Comments
+// @Accept json
+// @Produce json
+// @Param commentId path int true "Comment ID"
+// @Param page query int false "Page number (default 1)"
+// @Success 200 {object} map[string]interface{} "replies: []responses.CommentsReponse, totalPages: int"
+// @Failure 400 {object} map[string]string "Invalid comment ID"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /comments/{commentId}/replies [get]
 func (h *Handler) GetCommentReplies(c *fiber.Ctx) error {
 	commentId, _ := c.ParamsInt("commentId")
 	page := c.QueryInt("page", 1)

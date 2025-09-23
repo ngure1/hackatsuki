@@ -2,10 +2,12 @@ package server
 
 import (
 	"apiv2/internal/database"
+	_ "apiv2/internal/docs"
 	"apiv2/internal/handlers"
 	"apiv2/internal/store"
 
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	fiberSwagger "github.com/swaggo/fiber-swagger"
 )
 
 func (s *FiberServer) RegisterFiberRoutes() {
@@ -25,6 +27,9 @@ func (s *FiberServer) RegisterFiberRoutes() {
 	us := store.NewUserStore(db)
 	ps := store.NewPostStore(db)
 	h := handlers.New(cs, ms, us, ps)
+
+	// Swagger route
+	s.Get("/swagger/*", fiberSwagger.WrapHandler)
 
 	//auth routes
 	s.Post("/signin", h.SigninHandler)
@@ -51,5 +56,5 @@ func (s *FiberServer) RegisterFiberRoutes() {
 
 	// comment  routes
 	commentRoutes := s.Group("/comments", h.AuthMiddleware())
-	commentRoutes.Get("/:commentId/replies",h.GetCommentReplies)
+	commentRoutes.Get("/:commentId/replies", h.GetCommentReplies)
 }

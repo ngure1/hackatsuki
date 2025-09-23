@@ -18,11 +18,27 @@ type GoogleUser struct {
 	Name  string `json:"name"`
 }
 
+// GoogleAuthHandler godoc
+// @Summary Google OAuth2 login
+// @Description Redirects user to Google's OAuth2 consent screen for authentication.
+// @Tags Auth
+// @Produce json
+// @Success 302 {string} string "Redirect to Google OAuth2"
+// @Router /oauth/google [get]
 func (h *Handler) GoogleAuthHandler(c *fiber.Ctx) error {
 	url := auth.ConfigGoogle().AuthCodeURL("state", oauth2.SetAuthURLParam("prompt", "select_account"))
 	return c.Redirect(url)
 }
 
+// GoogleAuthRedirectHandler godoc
+// @Summary Google OAuth2 callback
+// @Description Handles Google OAuth2 callback, retrieves user info, creates or logs in user, returns JWT token.
+// @Tags Auth
+// @Produce json
+// @Param code query string true "Authorization code returned by Google"
+// @Success 200 {object} map[string]string "access_token"
+// @Failure 500 {object} map[string]string "Failed to exchange token or create user"
+// @Router /oauth/redirect [get]
 func (h *Handler) GoogleAuthRedirectHandler(c *fiber.Ctx) error {
 	code := c.Query("code")
 	c.UserContext()
