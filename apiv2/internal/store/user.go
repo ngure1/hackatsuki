@@ -12,6 +12,20 @@ type UserStore struct {
 	db *gorm.DB
 }
 
+// GetUserById implements user.Store.
+func (us UserStore) GetUserById(userId uint) (*models.User, error) {
+	var user models.User
+	err := us.db.Where("id = ?", userId).First(&user).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+	if err != nil {
+		return nil, fmt.Errorf("an unexpected error occured: %s", err)
+	}
+
+	return &user, nil
+}
+
 // Create implements user.Store.
 func (us UserStore) Create(newUser models.User) error {
 	err := us.db.Create(&newUser).Error

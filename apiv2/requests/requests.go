@@ -1,4 +1,4 @@
-package handlers
+package requests
 
 type DiagnosisRequest struct {
 	Image  string `json:"image"`
@@ -22,4 +22,9 @@ type SignUpRequest struct {
 	Email     string `json:"email"`
 	Password  string `json:"password"`
 	// PhoneNumber *string `json:"phone_number"`
+}
+
+type CreateCommentRequest struct {
+	Content         string `json:"content"`
+	ParentCommentId *uint  `json:"parent_comment_id"`
 }

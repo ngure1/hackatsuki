@@ -1,3 +1,16 @@
+// @title Hackatsuki api
+// @version 1.0
+// @description This is the API documentation for the hackatsuki api.
+
+// @contact.name API Support
+// @contact.email ngugijoseph700@gmail.com
+
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+
+// @host localhost:8080
+// @BasePath /
+
 package main
 
 import (

@@ -3,6 +3,7 @@ package handlers
 import (
 	"apiv2/auth"
 	"apiv2/internal/models"
+	"apiv2/requests"
 	"errors"
 
 	"github.com/gofiber/fiber/v2"
@@ -10,8 +11,20 @@ import (
 	"gorm.io/gorm"
 )
 
+// SigninHandler godoc
+// @Summary Sign in a user
+// @Description Authenticate a user with email and password, returns a JWT token on success.
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body requests.SigninRequest true "User credentials"
+// @Success 200 {object} map[string]string "access_token"
+// @Failure 400 {object} map[string]string "Invalid request or wrong credentials"
+// @Failure 401 {object} map[string]string "Unauthorized - user not found"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /signin [post]
 func (h *Handler) SigninHandler(c *fiber.Ctx) error {
-	body := new(SigninRequest)
+	body := new(requests.SigninRequest)
 
 	if err := c.BodyParser(body); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
@@ -51,8 +64,20 @@ func (h *Handler) SigninHandler(c *fiber.Ctx) error {
 	return HandleLogin(user, body.Password)(c)
 }
 
+// SignupHandler godoc
+// @Summary Register a new user
+// @Description Creates a new user account with email and password, returns JWT token on success.
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body requests.SignUpRequest true "User registration data"
+// @Success 200 {object} map[string]string "access_token"
+// @Failure 400 {object} map[string]string "Validation error or user already exists"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /signup [post]
 func (h *Handler) SignupHandler(c *fiber.Ctx) error {
-	body := new(SignUpRequest)
+	body := new(requests.SignUpRequest)
+	// todo : imrove error handling here
 	if err := c.BodyParser(body); err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
@@ -102,7 +127,7 @@ func (h *Handler) SignupHandler(c *fiber.Ctx) error {
 	return HandleLogin(&newUser, body.Password)(c)
 }
 
-func HandleLogin(user *models.User, password string) func(c *fiber.Ctx) error {
+func HandleLogin(user *models.User, password string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		if *user.IsPasswordSet {
 			if err := bcrypt.CompareHashAndPassword([]byte(*user.PasswordHash), []byte(password)); err != nil {

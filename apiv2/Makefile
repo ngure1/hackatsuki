@@ -1,5 +1,9 @@
 # Simple Makefile for a Go project
 
+# swagger
+docs:
+	@swag init -g cmd/api/main.go -o internal/docs
+
 # Build the application
 all: build test
 
