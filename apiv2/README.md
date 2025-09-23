@@ -120,6 +120,13 @@ Clean up binary from the last build:
 ```bash
 make clean
 ```
+Generate documentation
+```bash
+make docs
+```
+
+#### Api Documentation
+Visit the [Swagger Endpoint](http://localhost:8080/swagger/index.html#/) to view the api documentation.
 
 
 ## Support
