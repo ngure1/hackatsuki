@@ -1,0 +1,450 @@
+basePath: /
+definitions:
+  requests.CreateCommentRequest:
+    properties:
+      content:
+        type: string
+      parent_comment_id:
+        type: integer
+    type: object
+  requests.SignUpRequest:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      password:
+        type: string
+    type: object
+  requests.SigninRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  responses.CommentsReponse:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      parent_comment_id:
+        type: integer
+      post_id:
+        type: integer
+      replies_count:
+        type: integer
+      user_id:
+        type: integer
+    type: object
+  responses.PostResponse:
+    properties:
+      comments_count:
+        type: integer
+      crop:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      image_url:
+        type: string
+      likes_count:
+        type: integer
+      question:
+        type: string
+      user:
+        $ref: '#/definitions/responses.UserResponse'
+    type: object
+  responses.UserResponse:
+    properties:
+      first_name:
+        type: string
+      id:
+        type: integer
+      last_name:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: ngugijoseph700@gmail.com
+    name: API Support
+  description: This is the API documentation for the hackatsuki api.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  title: Hackatsuki api
+  version: "1.0"
+paths:
+  /comments/{commentId}/replies:
+    get:
+      consumes:
+      - application/json
+      description: Fetch paginated replies for a given comment
+      parameters:
+      - description: Comment ID
+        in: path
+        name: commentId
+        required: true
+        type: integer
+      - description: Page number (default 1)
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'replies: []responses.CommentsReponse, totalPages: int'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid comment ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get replies to a comment
+      tags:
+      - Comments
+  /oauth/google:
+    get:
+      description: Redirects user to Google's OAuth2 consent screen for authentication.
+      produces:
+      - application/json
+      responses:
+        "302":
+          description: Redirect to Google OAuth2
+          schema:
+            type: string
+      summary: Google OAuth2 login
+      tags:
+      - Auth
+  /oauth/redirect:
+    get:
+      description: Handles Google OAuth2 callback, retrieves user info, creates or
+        logs in user, returns JWT token.
+      parameters:
+      - description: Authorization code returned by Google
+        in: query
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: access_token
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Failed to exchange token or create user
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Google OAuth2 callback
+      tags:
+      - Auth
+  /posts:
+    get:
+      description: Retrieve paginated list of posts
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'posts: []responses.PostResponse, total_pages: int'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List posts
+      tags:
+      - Posts
+    post:
+      consumes:
+      - multipart/form-data
+      description: Create a new post with question, description, and optional image
+      parameters:
+      - description: Post question
+        in: formData
+        name: question
+        required: true
+        type: string
+      - description: Post description
+        in: formData
+        name: description
+        required: true
+        type: string
+      - description: Crop name
+        in: formData
+        name: crop
+        type: string
+      - description: Image file
+        in: formData
+        name: image
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/responses.PostResponse'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a post
+      tags:
+      - Posts
+  /posts/{postId}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a post by its ID
+      parameters:
+      - description: Post ID
+        in: path
+        name: postId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.PostResponse'
+        "404":
+          description: Post not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get a single post
+      tags:
+      - Posts
+  /posts/{postId}/comments:
+    get:
+      consumes:
+      - application/json
+      description: Fetch paginated comments for a given post
+      parameters:
+      - description: Post ID
+        in: path
+        name: postId
+        required: true
+        type: integer
+      - description: Page number (default 1)
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'comments: []responses.CommentsReponse, totalPages: int'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid post ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get comments on a post
+      tags:
+      - Comments
+    post:
+      consumes:
+      - application/json
+      description: Creates a comment on a specific post. Supports replying to another
+        comment if `parent_comment_id` is provided.
+      parameters:
+      - description: Post ID
+        in: path
+        name: postId
+        required: true
+        type: integer
+      - description: Comment request body
+        in: body
+        name: comment
+        required: true
+        schema:
+          $ref: '#/definitions/requests.CreateCommentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/responses.CommentsReponse'
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Add a comment to a post
+      tags:
+      - Comments
+  /posts/{postId}/likes:
+    post:
+      description: Like a post by ID
+      parameters:
+      - description: Post ID
+        in: path
+        name: postId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            type: string
+        "500":
+          description: Failed to like post
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Like a post
+      tags:
+      - Posts
+  /signin:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate a user with email and password, returns a JWT token
+        on success.
+      parameters:
+      - description: User credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.SigninRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: access_token
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request or wrong credentials
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized - user not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Sign in a user
+      tags:
+      - Auth
+  /signup:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user account with email and password, returns JWT
+        token on success.
+      parameters:
+      - description: User registration data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.SignUpRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: access_token
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Validation error or user already exists
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register a new user
+      tags:
+      - Auth
+swagger: "2.0"
