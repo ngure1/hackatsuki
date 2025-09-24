@@ -7,6 +7,7 @@ class AppTheme {
   static const Color green2 = Color(0xFF16A34A);
   static const Color green3 = Color(0xFF22C55E);
   static const Color green4 = Color(0xFFF0F9F0);
+  static const Color green5 = Color.fromRGBO(102, 187, 106, 1);
   static const Color lightGreen1 = Color(0xFFF0F9F0);
   static const Color lightGreen2 = Color(0xFFE8F5E8);
   static const Color gray1 = Color.fromRGBO(229, 231, 235, 1);
