@@ -90,7 +90,7 @@ func (h *Handler) SignupHandler(c *fiber.Ctx) error {
 	}
 
 	user, err := h.userStore.GetUserByEmail(body.Email)
-	if user != nil || err != nil {
+	if user != nil || (err != nil && !errors.Is(err, gorm.ErrRecordNotFound)) {
 		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
 			"message": "user with that email already exists",
 			"error":   err.Error(),
