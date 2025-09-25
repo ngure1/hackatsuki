@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:mobile/data/models/message.dart';
-import 'package:mobile/data/services/chat_service.dart';
 import 'package:mobile/data/utils.dart';
 
 class MessageService {

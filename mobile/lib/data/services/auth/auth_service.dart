@@ -38,31 +38,41 @@ Future<UserDetails> signupWithEmail({
     }),
   );
 
-  if (response.statusCode == 200) {
+  if (response.statusCode == 200 || response.statusCode == 201) {
     final data = jsonDecode(response.body);
+    if (data['access_token'] == null) {
+      throw Exception('Signup failed: ${response.body}');
+    }
     _saveTokens(data);
-    return UserDetails.fromJson(data['user']);
+
+    return UserDetails(
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+      phoneNumber: "",
+    );
   } else {
-    throw Exception('Signup failed: ${response.body}');
+    throw Exception('Signup failed: ${response.statusCode} ${response.body}');
   }
 }
 
 
-  Future<UserDetails> loginWithEmail(String email, String password) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/signin'),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({'email': email, 'password': password}),
-    );
+  Future<void> loginWithEmail(String email, String password) async {
+  final response = await http.post(
+    Uri.parse('$baseUrl/signin'),
+    headers: {"Content-Type": "application/json"},
+    body: jsonEncode({'email': email, 'password': password}),
+  );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      _saveTokens(data);
-      return UserDetails.fromJson(data['user']);
-    } else {
-      throw Exception('Login Failed: ${response.body}');
-    }
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+
+    _saveTokens(data);
+  } else {
+    throw Exception('Login Failed: ${response.body}');
   }
+}
+
 
   Future<UserDetails> loginWithGoogleCode(String code) async {
   final response = await http.get(

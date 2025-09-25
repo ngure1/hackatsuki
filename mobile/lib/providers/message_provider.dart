@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/data/models/message.dart';
-import 'package:mobile/data/services/chat_service.dart';
 import 'package:mobile/data/services/message_service.dart';
 import 'package:mobile/providers/image_provider.dart';
 
@@ -50,7 +49,7 @@ class MessageProvider extends ChangeNotifier {
           _chatMessages[_activeChatId]![lastIndex] = aiMessage;
         }
         notifyListeners();
-        await Future.delayed(const Duration(milliseconds: 500));
+        await Future.delayed(const Duration(milliseconds: 50));
       }
     } catch (e) {
       print(e);

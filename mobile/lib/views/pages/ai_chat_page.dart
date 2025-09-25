@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/providers/chat_provider.dart';
 import 'package:mobile/providers/image_provider.dart';
 import 'package:mobile/providers/message_provider.dart';
 import 'package:mobile/theme.dart';
@@ -20,9 +21,19 @@ class _AiChatPageState extends State<AiChatPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final imageProvider = context.read<ImageProviderNotifier>();
       final messageProvider = context.read<MessageProvider>();
+      final chatProvider = context.read<ChatProvider>();
+
+      if (chatProvider.activeChat == null) {
+        await chatProvider.createNewChat();
+      }
+
+      final activeChat = chatProvider.activeChat;
+      if (activeChat != null) {
+      messageProvider.setActiveChat(activeChat.id!);
+    }
 
       final prefilledText = messageProvider.getPrefilledMessage(imageProvider);
       if (prefilledText.isNotEmpty) {
@@ -54,7 +65,6 @@ class _AiChatPageState extends State<AiChatPage> {
   }
 
   Widget _buildInputBar() {
-
     return Consumer<ImageProviderNotifier>(
       builder: (context, imageProvider, _) {
         return Padding(
@@ -149,7 +159,7 @@ class _AiChatPageState extends State<AiChatPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.appBarBackground,
+      backgroundColor: AppTheme.green4,
       drawer: ChatListDrawer(),
       appBar: AppbarWidget(
         leading: Builder(

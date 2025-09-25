@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/providers/chat_provider.dart';
+import 'package:mobile/providers/message_provider.dart';
 import 'package:mobile/views/pages/ai_chat_page.dart';
 import 'package:provider/provider.dart';
 
@@ -24,6 +25,7 @@ class ChatListDrawer extends StatelessWidget {
                       title: Text('Chat ${index + 1}'),
                       onTap: () {
                         provider.setActiveChat(chat);
+                        context.read<MessageProvider>().setActiveChat(chat.id!);
                         Navigator.pop(context);
                         Navigator.push(
                           context,
@@ -39,6 +41,11 @@ class ChatListDrawer extends StatelessWidget {
                 title: Text('New Chat'),
                 onTap: () async {
                   await provider.createNewChat();
+                  final newChat = provider.activeChat;
+
+                  if (newChat != null) {
+                    context.read<MessageProvider>().setActiveChat(newChat.id!);
+                  }
                   Navigator.pop(context);
                 },
               ),

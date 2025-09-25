@@ -94,18 +94,22 @@ class AuthProvider extends ChangeNotifier {
 
 
 
-  Future<void> loginWithEmail(String email, String password) async {
-    _isLoading = true;
-    notifyListeners();
+  
 
-    try {
-      final user = await _authService.loginWithEmail(email, password);
-      await _saveUser(user);
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
+  Future<void> loginWithEmail(String email, String password) async {
+  _isLoading = true;
+  notifyListeners();
+
+  try {
+    
+    await _authService.loginWithEmail(email, password);
+
+  } finally {
+    _isLoading = false;
+    notifyListeners();
   }
+}
+
 
   Future<void> loginWithGoogle() async {
     _isLoading = true;

@@ -135,7 +135,7 @@ class _IntroPage2State extends State<IntroPage2> {
                   TextField(
                     controller: _passwordController,
                     obscureText: true,
-                    style: AppTheme.bodyMedium.copyWith(color: AppTheme.gray2),
+                    style: AppTheme.bodyMedium.copyWith(color: AppTheme.lightGray2),
                     decoration: InputDecoration(
                       enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(color: AppTheme.lightGray1),

@@ -10,6 +10,7 @@ import 'package:mobile/providers/image_provider.dart';
 import 'package:mobile/providers/message_provider.dart';
 import 'package:mobile/providers/navigation_provider.dart';
 import 'package:mobile/theme.dart';
+import 'package:mobile/views/pages/login_page.dart';
 import 'package:mobile/views/pages/onboarding_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -60,7 +61,7 @@ class MyApp extends StatelessWidget {
               ? OnboardingScreen()
               : context.watch<AuthProvider>().isLoggedIn
                   ? WidgetTree() 
-                  : Placeholder(), 
+                  : LoginPage(), 
         );
       },
     );
