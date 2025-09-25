@@ -2,8 +2,10 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:mobile/data/models/user_details.dart';
 import 'package:mobile/data/services/auth/auth_service.dart';
+import 'package:mobile/data/utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthProvider extends ChangeNotifier {
@@ -13,8 +15,6 @@ class AuthProvider extends ChangeNotifier {
   UserDetails? _user;
   bool _isLoading = false;
 
-  String? _tempFirstName;
-  String? _tempLastName;
   String? _tempPhoneNumber;
 
   AuthProvider(this._authService);
@@ -68,6 +68,32 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> signup({
+  required String firstName,
+  required String lastName,
+  required String email,
+  required String password,
+}) async {
+  _isLoading = true;
+  notifyListeners();
+
+  try {
+    final user = await _authService.signupWithEmail(
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+      password: password,
+    );
+    await _saveUser(user);
+  } finally {
+    _isLoading = false;
+    notifyListeners();
+  }
+}
+
+
+
+
   Future<void> loginWithEmail(String email, String password) async {
     _isLoading = true;
     notifyListeners();
@@ -81,12 +107,20 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> loginWithGoogle(String idToken) async {
+  Future<void> loginWithGoogle() async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      final user = await _authService.loginWithGoogle(idToken);
+      final redirectUrl = await FlutterWebAuth2.authenticate(
+        url: '$baseUrl/oauth/google?redirect_uri=aigrowapp://auth',   
+        callbackUrlScheme: 'aigrowapp',  
+      );
+
+      final code = Uri.parse(redirectUrl).queryParameters['code'];
+      if (code == null) throw Exception('Authorization code not returned');
+
+      final user = await _authService.loginWithGoogleCode(code);
       await _saveUser(user);
     } finally {
       _isLoading = false;
@@ -94,19 +128,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> loginWithFacebook(String idToken) async {
-    _isLoading = true;
-    notifyListeners();
-
-    try {
-      final user = await _authService.loginWithFacebook(idToken);
-      await _saveUser(user);
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
+  
   Future<void> refreshToken() async {
     try {
       await _authService.refreshAuthToken();

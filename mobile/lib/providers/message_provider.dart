@@ -1,17 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/data/models/message.dart';
+import 'package:mobile/data/services/chat_service.dart';
 import 'package:mobile/data/services/message_service.dart';
 import 'package:mobile/providers/image_provider.dart';
 
 class MessageProvider extends ChangeNotifier {
-  final List<Message> _messages = [];
-  final MessageService _service = MessageService();
+  final MessageService _service;
 
-  List<Message> get messages => List.unmodifiable(_messages);
+  final Map<String, List<Message>> _chatMessages = {};
+  String? _activeChatId;
+
+  MessageProvider(this._service);
+
+  List<Message> get messages => _activeChatId != null
+      ? List.unmodifiable(_chatMessages[_activeChatId] ?? [])
+      : [];
+
+  List<String> get chatIds => _chatMessages.keys.toList();
+
+  void setActiveChat(String chatId) {
+    _activeChatId = chatId;
+    _chatMessages.putIfAbsent(chatId, () => []);
+
+    notifyListeners();
+  }
 
   Future<void> sendUserMessage(String text, {dynamic image}) async {
-    final userMessage = Message.userMessage(text, image: image);
-    _messages.add(userMessage);
+    if (_activeChatId == null) {
+      throw Exception("Active chat must be set before sending a message");
+    }
+
+    final userMessage = Message.userMessage(
+      text,
+      image: image,
+      chatId: _activeChatId,
+    );
+    _chatMessages[_activeChatId]!.add(userMessage);
     notifyListeners();
 
     try {
@@ -19,18 +43,23 @@ class MessageProvider extends ChangeNotifier {
       await for (final partial in _service.sendMessageStream(userMessage)) {
         if (aiMessage == null) {
           aiMessage = partial;
-          _messages.add(aiMessage);
+          _chatMessages[_activeChatId]!.add(aiMessage);
         } else {
-          final lastIndex = _messages.length - 1;
+          final lastIndex = _chatMessages[_activeChatId]!.length - 1;
           aiMessage = aiMessage.copyWith(text: partial.text);
-          _messages[lastIndex] = aiMessage;
+          _chatMessages[_activeChatId]![lastIndex] = aiMessage;
         }
         notifyListeners();
-        await Future.delayed(const Duration(microseconds: 500));
+        await Future.delayed(const Duration(milliseconds: 500));
       }
     } catch (e) {
       print(e);
     }
+  }
+
+  void startNewChat() {
+    _activeChatId = null;
+    notifyListeners();
   }
 
   String getPrefilledMessage(ImageProviderNotifier imageProvider) {

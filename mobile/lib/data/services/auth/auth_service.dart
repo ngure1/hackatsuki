@@ -16,9 +16,41 @@ class AuthService {
     _refreshToken = data['refreshToken'];
   }
 
+  void restoreTokens(String accessToken, String refreshToken) {
+    _accessToken = accessToken;
+    _refreshToken = refreshToken;
+  }
+
+Future<UserDetails> signupWithEmail({
+  required String firstName,
+  required String lastName,
+  required String email,
+  required String password,
+}) async {
+  final response = await http.post(
+    Uri.parse('$baseUrl/signup'),
+    headers: {"Content-Type": "application/json"},
+    body: jsonEncode({
+      'first_name': firstName,
+      'last_name': lastName,
+      'email': email,
+      'password': password,
+    }),
+  );
+
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+    _saveTokens(data);
+    return UserDetails.fromJson(data['user']);
+  } else {
+    throw Exception('Signup failed: ${response.body}');
+  }
+}
+
+
   Future<UserDetails> loginWithEmail(String email, String password) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/auth/login'),
+      Uri.parse('$baseUrl/signin'),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({'email': email, 'password': password}),
     );
@@ -32,37 +64,22 @@ class AuthService {
     }
   }
 
-  Future<UserDetails> loginWithGoogle(String idToken) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/auth/google/'),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({'token': idToken}),
-    );
+  Future<UserDetails> loginWithGoogleCode(String code) async {
+  final response = await http.get(
+    Uri.parse('$baseUrl/oauth/redirect?code=$code'),
+    headers: {"Content-Type": "application/json"},
+  );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      _saveTokens(data);
-      return UserDetails.fromJson(data['user']);
-    } else {
-      throw Exception("Google login failed: ${response.body}");
-    }
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+    _saveTokens(data);
+    return UserDetails.fromJson(data['user']);
+  } else {
+    throw Exception("Google login failed: ${response.body}");
   }
+}
 
-  Future<UserDetails> loginWithFacebook(String fbAccessToken) async {
-    final response = await http.post(
-      Uri.parse("$baseUrl/auth/facebook"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({'token': fbAccessToken}),
-    );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      _saveTokens(data);
-      return UserDetails.fromJson(data['user']);
-    } else {
-      throw Exception('Facebook login failed: ${response.body}');
-    }
-  }
 
   Future<void> logout() async {
     if (_accessToken == null) return;
@@ -100,11 +117,6 @@ class AuthService {
     } else {
       throw Exception("Token refresh failed: ${response.body}");
     }
-  }
-
-  void restoreTokens(String accessToken, String refreshToken) {
-    _accessToken = accessToken;
-    _refreshToken = refreshToken;
   }
 
   // Authenticated GET

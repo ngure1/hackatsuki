@@ -42,14 +42,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),),
             SizedBox(height: 32.0),
             Expanded(child: PageView(
-              scrollBehavior: ScrollBehavior(),
+              physics: NeverScrollableScrollPhysics(),
               controller: _pageController,
               onPageChanged: (index) => setState(() {
                 currentStep = index;
               }),
               children: [
-                IntroPage1(),
-                IntroPage2(),
+                IntroPage1(pageController: _pageController,),
+                IntroPage2(pageController: _pageController,),
                 IntroPage3(),
                 IntroPage4(),
                 IntroPage5(),

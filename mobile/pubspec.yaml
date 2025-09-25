@@ -20,6 +20,7 @@ dependencies:
   flutter_facebook_auth: ^7.1.2
   flutter_secure_storage: ^9.2.4
   flutter_svg: ^2.2.1
+  flutter_web_auth_2: ^4.1.0
 
 dev_dependencies:
   flutter_test:
