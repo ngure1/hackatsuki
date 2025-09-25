@@ -17,12 +17,13 @@ class Message {
     this.imageUrl,
   });
 
-  factory Message.userMessage(String text, {File? image}) {
+  factory Message.userMessage(String text, {File? image, String? chatId}) {
     return Message(
       text: text,
       isUser: true,
       timestamp: DateTime.now(),
       image: image,
+      chatId: chatId,
     );
   }
 

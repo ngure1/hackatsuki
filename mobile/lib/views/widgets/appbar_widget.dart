@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 
- class AppbarWidget extends StatelessWidget implements PreferredSizeWidget {
-  const AppbarWidget({super.key});
+class AppbarWidget extends StatelessWidget implements PreferredSizeWidget {
+  const AppbarWidget({super.key, this.leading});
+
+  final Widget? leading;
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      title: Image.asset('assets/images/aigrow_logo.png'), );
+      leading: leading,
+      title: Image.asset('assets/images/aigrow_logo.png'));
   }
 
   @override
