@@ -6,18 +6,13 @@ import 'package:mobile/data/services/chat_service.dart';
 import 'package:mobile/data/utils.dart';
 
 class MessageService {
-  final ChatService _chatService = ChatService();
 
   Stream<Message> sendMessageStream(Message message) async* {
-    String? chatId = message.chatId;
-
-    if (chatId == null || chatId.isEmpty) {
-      final chat = await _chatService.createChat();
-      chatId = chat.id;
-      message = message.copyWith(chatId: chatId);
+    if (message.chatId == null || message.chatId!.isEmpty) {
+      throw Exception('Message must have a valid chatId');
     }
 
-    final uri = Uri.parse(ApiEndpoints.diagnosis(chatId!));
+    final uri = Uri.parse(ApiEndpoints.diagnosis(message.chatId!));
 
     final request = http.MultipartRequest('POST', uri);
     request.fields['prompt'] = message.text;
