@@ -18,6 +18,7 @@ class BlogPage extends StatelessWidget {
     return DefaultTabController(
       length: categories.length,
       child: Scaffold(
+        backgroundColor: AppTheme.green4,
         appBar: AppbarWidget(),
         body: Padding(
           padding: EdgeInsets.symmetric(horizontal: 16.0),

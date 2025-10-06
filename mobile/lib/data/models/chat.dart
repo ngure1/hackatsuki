@@ -1,20 +1,22 @@
 class Chat {
   final String? id;
-  final String? message;
+  final String? title;
 
-  const Chat({this.id, this.message});
+  const Chat({this.id, this.title});
 
   factory Chat.fromJson(Map<String, dynamic> json) {
-    return Chat(
-      id: json['chat_id']?.toString(),
-      message: json['message'] as String?,
-    );
+    try {
+      return Chat(
+        id: json['chat_id']?.toString() ?? 
+            json['ID']?.toString() ?? 
+            json['id']?.toString(),
+        title: json['title'] as String? ?? 'New Chat',
+      );
+    } catch (e) {
+      rethrow;
+    }
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'chat_id': id,       
-      'message': message,
-    };
-  }
+  @override
+  String toString() => 'Chat(id: $id, title: $title)';
 }

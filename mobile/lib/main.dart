@@ -9,6 +9,7 @@ import 'package:mobile/providers/chat_provider.dart';
 import 'package:mobile/providers/image_provider.dart';
 import 'package:mobile/providers/message_provider.dart';
 import 'package:mobile/providers/navigation_provider.dart';
+import 'package:mobile/providers/post_filter_provider.dart';
 import 'package:mobile/theme.dart';
 import 'package:mobile/views/pages/login_page.dart';
 import 'package:mobile/views/pages/onboarding_screen.dart';
@@ -30,6 +31,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => ChatProvider(chatService)),
         ChangeNotifierProvider(create: (_) => MessageProvider(messageService)),
         ChangeNotifierProvider(create: (_) => BlogFilterProvider()),
+        ChangeNotifierProvider(create: (_) => PostFilterProvider()),
       ],
       child: MyApp(),
     ),

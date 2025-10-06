@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:http/http.dart' as http;
 import 'package:mobile/data/models/chat.dart';
 import 'package:mobile/data/services/auth/auth_service.dart';
 import 'package:mobile/data/utils.dart';
@@ -11,7 +10,11 @@ class ChatService {
   ChatService(this._authService);
 
   Future<Chat> createChat() async {
-    final response = await http.post(Uri.parse(ApiEndpoints.chats));
+    if(_authService.accessToken == null) {
+      throw Exception('Not authenticated - cannot create chat');
+    }
+
+    final response = await _authService.post(ApiEndpoints.chats, {});
     if (response.statusCode == 201) {
       return Chat.fromJson(jsonDecode(response.body));
     } else {
@@ -20,9 +23,15 @@ class ChatService {
   }
 
   Future<List<Chat>> fetchChats() async {
+
+    if (_authService.accessToken == null) {
+      throw Exception('Not authenticated - cannot fetch chats');
+    }
+    
     final response = await _authService.get(ApiEndpoints.chats);
     if (response.statusCode == 200) {
-      final data = List<Map<String, dynamic>>.from(jsonDecode(response.body));
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      final data = List<Map<String, dynamic>>.from(body['chats']);
       return data.map((json) => Chat.fromJson(json)).toList();
     } else {
       throw Exception('Failed to fetch chats: ${response.body}');

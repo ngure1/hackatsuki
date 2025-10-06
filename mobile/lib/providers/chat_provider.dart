@@ -9,34 +9,67 @@ class ChatProvider extends ChangeNotifier {
 
   List<Chat> _chats = [];
   Chat? _activeChat;
+  bool _isLoading = false;
 
   List<Chat> get chats => List.unmodifiable(_chats);
   Chat? get activeChat => _activeChat;
+  bool get isLoading => _isLoading;
 
   Future<void> fetchChats() async {
+    _isLoading = true;
+    notifyListeners();
+
     try {
       _chats = await _service.fetchChats();
+      if (_activeChat == null && _chats.isNotEmpty) {
+        _activeChat = _chats.first;
+      }
       notifyListeners();
     } catch (e) {
       print("Failed to fetch chats: $e");
       rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
-  Future<void> createNewChat() async {
+  Future<Chat?> createNewChat() async {
+    _isLoading = true;
+    notifyListeners();
+
     try {
       final newChat = await _service.createChat();
-      _chats.add(newChat);
+
+      _chats.insert(0, newChat);
       _activeChat = newChat;
       notifyListeners();
+      return newChat;
     } catch (e) {
       print("Failed to create chat: $e");
       rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
   void setActiveChat(Chat chat) {
-    _activeChat = chat;
-    notifyListeners();
+    if (_chats.any((c) => c.id == chat.id)) {
+      _activeChat = chat;
+      notifyListeners();
+    } else {
+      print("Chat not found in list: ${chat.id}");
+    }
+  }
+
+  Chat? getChatById(String? chatId) {
+    if (chatId == null) return null;
+
+    try {
+      return _chats.firstWhere((chat) => chat.id == chatId);
+    } catch (_) {
+      return null;
+    }
   }
 }

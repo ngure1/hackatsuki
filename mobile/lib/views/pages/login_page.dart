@@ -3,6 +3,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:mobile/navigation/widget_tree.dart';
 import 'package:mobile/providers/auth/auth_provider.dart';
 import 'package:mobile/theme.dart';
+import 'package:mobile/views/widgets/password_text_field_widget.dart';
 import 'package:provider/provider.dart';
 
 class LoginPage extends StatefulWidget {
@@ -164,7 +165,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   ),
                 ),
 
-              _buildTextField(
+              PasswordTextFieldWidget(
                 controller: _emailController,
                 label: 'Email',
                 hint: 'Enter your email',
@@ -182,7 +183,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               ),
               const SizedBox(height: 16),
 
-              _buildTextField(
+              PasswordTextFieldWidget(
                 controller: _passwordController,
                 label: 'Password',
                 hint: 'Enter your password',
@@ -367,33 +368,5 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    required IconData prefixIcon,
-    bool obscureText = false,
-    Widget? suffixIcon,
-    TextInputType? keyboardType,
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      obscureText: obscureText,
-      keyboardType: keyboardType,
-      validator: validator,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        prefixIcon: Icon(prefixIcon, size: 20),
-        suffixIcon: suffixIcon,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16),),
-        focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: AppTheme.green2)),
-        floatingLabelStyle: AppTheme.labelMedium.copyWith(color: AppTheme.green2),
-        filled: true,
-        fillColor: Colors.grey[50],
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      ),
-    );
-  }
+  
 }
