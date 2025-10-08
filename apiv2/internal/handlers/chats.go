@@ -6,7 +6,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-
 func (h *Handler) CreateChat(c *fiber.Ctx) error {
 	userId, ok := c.Locals("userId").(uint)
 	var chat models.Chat
@@ -44,6 +43,6 @@ func (h *Handler) GetChats(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 		"chats":       chats,
-		"total_pages": totalPages,
+		"total_pages": totalPages / chatsPerPage,
 	})
 }

@@ -14,6 +14,24 @@ type ChatStore struct {
 	db *gorm.DB
 }
 
+// SetChatTitle implements chat.Store.
+func (cs *ChatStore) SetChatTitle(title string, chatId uint) error {
+	var chat models.Chat
+	err := cs.db.Where("id = ?", chatId).First(&chat).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return fmt.Errorf("chat not found: %s", err.Error())
+	}
+
+	if err != nil {
+		return fmt.Errorf("unexpected error when getting chat by id: %s", err.Error())
+	}
+
+	chat.Title = title
+
+	return cs.db.Save(chat).Error
+}
+
 // GetChats implements chat.Store.
 func (cs ChatStore) GetChats(page int, limit int, userId uint) ([]models.Chat, int, error) {
 	var chats []models.Chat

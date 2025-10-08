@@ -79,8 +79,8 @@ func (h *Handler) GetComments(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
-		"comments":   comments,
-		"totalPages": totalPages,
+		"comments":    comments,
+		"total_pages": totalPages / commentsPerPage,
 	})
 }
 
@@ -114,7 +114,7 @@ func (h *Handler) GetCommentReplies(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
-		"replies":    replies,
-		"totalPages": totalPages,
+		"replies":     replies,
+		"total_pages": totalPages / repliesPerPage,
 	})
 }

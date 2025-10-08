@@ -175,8 +175,9 @@ func (ps *PostStore) GetPost(postId uint) (*models.Post, error) {
 }
 
 // GetPosts implements posts.Store.
-func (ps *PostStore) GetPosts(page int, limit int) ([]models.Post, int, error) {
+func (ps *PostStore) GetPosts(page int, limit int) ([]responses.PostResponse, int, error) {
 	var posts []models.Post
+	var response []responses.PostResponse
 	var totalCount int64
 
 	if err := ps.db.Model(&models.Post{}).Count(&totalCount).Error; err != nil {
@@ -184,13 +185,35 @@ func (ps *PostStore) GetPosts(page int, limit int) ([]models.Post, int, error) {
 	}
 
 	offset := utils.GetOffset(page, limit)
-	err := ps.db.Limit(limit).Offset(offset).Find(&posts).Error
+	err := ps.db.Preload("Comments").Preload("User").Preload("Likes").Limit(limit).Offset(offset).Find(&posts).Error
+
+	for _, post := range posts {
+		commentCount := len(post.Comments)
+		likesCount := len(post.Likes)
+		user := responses.UserResponse{
+			ID:        post.User.ID,
+			FirstName: post.User.FirstName,
+			LastName:  post.User.LastName,
+		}
+
+		postResp := &responses.PostResponse{
+			ID:            post.ID,
+			Question:      post.Question,
+			Description:   post.Description,
+			Crop:          post.Crop,
+			ImageUrl:      post.ImageUrl,
+			User:          user,
+			CommentsCount: int64(commentCount),
+			LikesCount:    int64(likesCount),
+		}
+		response = append(response, *postResp)
+	}
 
 	if err != nil {
 		return nil, 0, fmt.Errorf("an unexpected error occured when retrieving paginated posts: %s", err.Error())
 	}
 
-	return posts, int(totalCount), nil
+	return response, int(totalCount), nil
 }
 
 func NewPostStore(db *gorm.DB) *PostStore {

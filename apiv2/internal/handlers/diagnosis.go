@@ -46,7 +46,7 @@ func (h *Handler) GetDiagnosis(c *fiber.Ctx) error {
 	for _, message := range messages {
 		previousMessages += fmt.Sprintf("{role: %s,content: %s}", message.SenderType, message.Content)
 	}
-	imageRequired := messages == nil
+	imageRequired := len(messages) == 0
 	file, err := c.FormFile("image")
 	if err != nil && imageRequired {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -73,8 +73,54 @@ func (h *Handler) GetDiagnosis(c *fiber.Ctx) error {
 
 	var wg sync.WaitGroup
 
-	wg.Add(1)
+	// create chat title
+	if len(messages) == 0 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			ctx := c.UserContext()
+			client, _ := genai.NewClient(ctx, &genai.ClientConfig{
+				APIKey:  os.Getenv("GEMINI_API_KEY"),
+				Backend: genai.BackendGeminiAPI,
+			})
 
+			var parts []*genai.Part
+
+			parts = append(
+				parts,
+				genai.NewPartFromText("You are given the following two text inputs"),
+				genai.NewPartFromText(fmt.Sprintf("System Prompt:\n%s", p.SystemPrompt)),
+				genai.NewPartFromText(fmt.Sprintf("User Prompt:\n%s", prompt)),
+				genai.NewPartFromText(p.TitlePrompt),
+			)
+
+			if file != nil {
+				uploadedFile, _ := client.Files.UploadFromPath(
+					ctx,
+					fmt.Sprintf("%s%s", FilePath, file.Filename),
+					nil,
+				)
+				parts = append(parts, genai.NewPartFromURI(uploadedFile.URI, uploadedFile.MIMEType))
+			}
+
+			contents := []*genai.Content{
+				genai.NewContentFromParts(parts, genai.RoleUser),
+			}
+
+			title, genErr := client.Models.GenerateContent(ctx, "gemini-2.5-flash", contents, nil)
+			if genErr != nil {
+				log.Errorf("error generating title: %s", genErr)
+				return
+			}
+
+			setErr := h.chatStore.SetChatTitle(title.Text(), uint(chatId))
+			if setErr != nil {
+				log.Errorf("error setting chat title: %s", setErr)
+			}
+		}()
+	}
+
+	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		err = h.messagesStore.Create(userMessage)
@@ -143,6 +189,7 @@ func (h *Handler) GetDiagnosis(c *fiber.Ctx) error {
 		}
 		h.messagesStore.Create(modelMessage)
 	})
+
 	c.Set("Content-Type", "text/plain")
 	return c.SendStatus(fiber.StatusOK)
 }

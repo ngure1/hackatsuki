@@ -13,6 +13,7 @@ type Post struct {
 	ImageUrl    *string `json:"image_url"`
 
 	UserID   uint      `json:"user_id" gorm:"index"`
+	User     User      `json:"user"    gorm:"foreignkey:UserID"`
 	Comments []Comment `json:"-"`
 	Likes    []Like    `json:"-"`
 }
