@@ -90,7 +90,7 @@ class HomePage extends StatelessWidget {
                       children: [
                         SizedBox(height: 10.0),
                         Image.asset(
-                          'assets/images/plant_image.png',
+                          'assets/images/logo.jpeg',
                           width: 30,
                           height: 30,
                         ),

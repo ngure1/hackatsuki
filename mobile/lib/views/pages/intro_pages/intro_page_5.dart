@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:mobile/navigation/widget_tree.dart';
 import 'package:mobile/theme.dart';
 import 'package:mobile/views/widgets/onboarding_button_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -37,6 +38,10 @@ class IntroPage5 extends StatelessWidget {
             onTap: () async {
               final prefs = await SharedPreferences.getInstance();
               await prefs.setBool('seenOnboarding', true);
+
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (_) => WidgetTree()),
+              );
             },
             buttonText: 'Start using AIGROW',
             color: AppTheme.white,

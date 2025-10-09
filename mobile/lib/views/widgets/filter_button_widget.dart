@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:mobile/theme.dart';
 import 'package:mobile/views/widgets/custom_container_widget.dart';
 
-class BlogFilterButtonWidget extends StatelessWidget {
-  const BlogFilterButtonWidget({
+class FilterButtonWidget extends StatelessWidget {
+  const FilterButtonWidget({
     super.key,
     required this.onTap,
     required this.buttonText,

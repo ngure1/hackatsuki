@@ -50,8 +50,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               children: [
                 IntroPage1(pageController: _pageController,),
                 IntroPage2(pageController: _pageController,),
-                IntroPage3(),
-                IntroPage4(),
+                IntroPage3(pageController: _pageController,),
+                IntroPage4(pageController: _pageController,),
                 IntroPage5(),
               ],
             ),),

@@ -3,8 +3,9 @@ import 'package:mobile/theme.dart';
 import 'package:mobile/views/widgets/onboarding_button_widget.dart';
 
 class IntroPage4 extends StatefulWidget {
-  const IntroPage4({super.key});
+  const IntroPage4({super.key, required this.pageController});
 
+  final PageController pageController;
   @override
   State<IntroPage4> createState() => _IntroPage4State();
 }
@@ -19,7 +20,7 @@ class _IntroPage4State extends State<IntroPage4> {
     {"icon": "🌳", "label": "Trees"},
   ];
 
-  Set<int> selectedIndexes = {}; 
+  Set<int> selectedIndexes = {};
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +42,6 @@ class _IntroPage4State extends State<IntroPage4> {
           ),
           const SizedBox(height: 20),
 
-          // scrollable list
           Expanded(
             child: ListView.builder(
               itemCount: plants.length,
@@ -99,7 +99,7 @@ class _IntroPage4State extends State<IntroPage4> {
           ),
           SizedBox(height: 32.0),
           OnboardingButtonWidget(
-            onTap: () {},
+            onTap: ()=> widget.pageController.previousPage(duration: Duration(milliseconds: 300), curve: Curves.easeInOutBack),
             buttonText: 'Back',
             color: AppTheme.green5,
             borderColor: AppTheme.lightGreen1,
@@ -107,7 +107,10 @@ class _IntroPage4State extends State<IntroPage4> {
           ),
           SizedBox(height: 8.0),
           OnboardingButtonWidget(
-            onTap: () {},
+            onTap: () => widget.pageController.nextPage(
+              duration: Duration(microseconds: 300),
+              curve: Curves.easeInOut,
+            ),
             buttonText: 'Continue',
             color: AppTheme.white,
             borderColor: AppTheme.white,
