@@ -7,7 +7,7 @@ import (
 
 type Store interface {
 	// page limit
-	GetPosts(page int, limit int) ([]models.Post, int, error)
+	GetPosts(page int, limit int) ([]responses.PostResponse, int, error)
 	GetPost(postId uint) (*models.Post, error)
 
 	CreatePost(question string, description string, userId uint, crop *string, imageUrl *string) (*models.Post, error)
