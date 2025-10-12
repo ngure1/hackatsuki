@@ -121,6 +121,39 @@ func (h *Handler) CreatePost(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(post)
 }
 
+// DeletePost godoc
+// @Summary Delete a post
+// @Tags Posts
+// @Produce json
+// @Param postId path int true "Post ID"
+// @Success 200 {string} string "ok"
+// @Failure 500 {object} map[string]string "Failed to Delete post"
+// @Router /posts/{postId} [delete]
+func (h *Handler) DeletePost(c *fiber.Ctx) error {
+	postId, _ := c.ParamsInt("postId")
+	userId := c.Locals("userId").(uint)
+
+	err := h.postsStore.DeletePost(uint(postId), userId)
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
+			"message": "invalid post id",
+			"error":   err.Error(),
+		})
+	}
+
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
+			"message": "Failed to delete post",
+			"error":   err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		"message": "Post deleted successfully",
+	})
+}
+
 // LikePost godoc
 // @Summary Like a post
 // @Description Like a post by ID

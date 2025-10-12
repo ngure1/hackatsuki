@@ -8,7 +8,8 @@ import (
 type Store interface {
 	// page limit
 	GetPosts(page int, limit int) ([]responses.PostResponse, int, error)
-	GetPost(postId uint) (*models.Post, error)
+	GetPost(postId uint) (*responses.PostResponse, error)
+	DeletePost(postId uint,userId uint)  error
 
 	CreatePost(question string, description string, userId uint, crop *string, imageUrl *string) (*models.Post, error)
 	LikePost(postId uint, userId uint) error

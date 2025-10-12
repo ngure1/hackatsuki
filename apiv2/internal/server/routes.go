@@ -50,6 +50,7 @@ func (s *FiberServer) RegisterFiberRoutes() {
 	postRoutes.Get("/:postId", h.GetPost)
 	//protected
 	postRoutes.Post("/", h.AuthMiddleware(), h.CreatePost)
+	postRoutes.Delete("/:postId", h.AuthMiddleware(), h.DeletePost)
 	postRoutes.Post("/:postId/likes", h.AuthMiddleware(), h.LikePost)
 	postRoutes.Post("/:postId/comments", h.AuthMiddleware(), h.CommentOnPost)
 	postRoutes.Get("/:postId/comments", h.AuthMiddleware(), h.GetComments)

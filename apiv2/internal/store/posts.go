@@ -14,6 +14,20 @@ type PostStore struct {
 	db *gorm.DB
 }
 
+// DeletePost implements posts.Store.
+func (ps *PostStore) DeletePost(postId uint, userId uint) error {
+	post, err := ps.GetPost(postId)
+	if err != nil {
+		return err
+	}
+
+	if post.User.ID != userId {
+		return fmt.Errorf("cannot delete another users post")
+	}
+
+	return ps.db.Delete(&models.Post{}, post.ID).Error
+}
+
 // GetCommentReplies implements posts.Store.
 func (ps *PostStore) GetCommentReplies(commentId uint, page int, limit int) ([]models.Comment, int, error) {
 	var comments []models.Comment
@@ -161,9 +175,9 @@ func (ps *PostStore) CreatePost(
 }
 
 // GetPost implements posts.Store.
-func (ps *PostStore) GetPost(postId uint) (*models.Post, error) {
+func (ps *PostStore) GetPost(postId uint) (*responses.PostResponse, error) {
 	var post models.Post
-	err := ps.db.Where("id = ?", postId).First(&post).Error
+	err := ps.db.Preload("Comments").Preload("User").Preload("Likes").Where("id = ?", postId).First(&post).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
@@ -171,7 +185,26 @@ func (ps *PostStore) GetPost(postId uint) (*models.Post, error) {
 		return nil, fmt.Errorf("an unexpected error occured when retrieving post: %s", err.Error())
 	}
 
-	return &post, nil
+	commentCount := len(post.Comments)
+	likesCount := len(post.Likes)
+	user := responses.UserResponse{
+		ID:        post.User.ID,
+		FirstName: post.User.FirstName,
+		LastName:  post.User.LastName,
+	}
+
+	postResp := &responses.PostResponse{
+		ID:            post.ID,
+		Question:      post.Question,
+		Description:   post.Description,
+		Crop:          post.Crop,
+		ImageUrl:      post.ImageUrl,
+		User:          user,
+		CommentsCount: int64(commentCount),
+		LikesCount:    int64(likesCount),
+	}
+
+	return postResp, nil
 }
 
 // GetPosts implements posts.Store.
