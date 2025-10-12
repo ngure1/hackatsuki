@@ -11,6 +11,7 @@ type Post struct {
 	Description string  `json:"description"`
 	Crop        *string `json:"crop,omitempty"`
 	ImageUrl    *string `json:"image_url"`
+	ChatUrl     *string `json:"chat_url,omitempty"`
 
 	UserID   uint      `json:"user_id" gorm:"index"`
 	User     User      `json:"user"    gorm:"foreignkey:UserID"`

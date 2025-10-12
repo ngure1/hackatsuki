@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"apiv2/internal/models"
 	"errors"
 	"fmt"
 	"os"
@@ -9,6 +10,32 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
+
+func (h *Handler) handleCreatePost(c *fiber.Ctx, userId uint, chatUrl *string) (*models.Post, error) {
+	file, _ := c.FormFile("image")
+	var imageUrl *string = nil
+
+	if file != nil {
+		c.SaveFile(file, fmt.Sprintf("%s%s", FilePath, file.Filename))
+		urlString := fmt.Sprintf("%s:%s/public/%s", os.Getenv("BACKEND_URL"), os.Getenv("PORT"), file.Filename)
+		imageUrl = &urlString
+	}
+
+	question := c.FormValue("question")
+	description := c.FormValue("description")
+	crop := c.FormValue("crop")
+
+	if question == "" || description == "" {
+		return nil, fmt.Errorf("question or description cannot be empty")
+	}
+
+	post, err := h.postsStore.CreatePost(question, description, userId, &crop, imageUrl, chatUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	return post, nil
+}
 
 // GetPosts godoc
 // @Summary List posts
@@ -91,33 +118,14 @@ func (h *Handler) GetPost(c *fiber.Ctx) error {
 func (h *Handler) CreatePost(c *fiber.Ctx) error {
 	userId := c.Locals("userId").(uint)
 
-	file, _ := c.FormFile("image")
-	var imageUrl *string = nil
-	if file != nil {
-		c.SaveFile(file, fmt.Sprintf("%s%s", FilePath, file.Filename))
-		urlString := fmt.Sprintf("%s:%s/public/%s", os.Getenv("BACKEND_URL"), os.Getenv("PORT"), file.Filename)
-		imageUrl = &urlString
-	}
-
-	question := c.FormValue("question")
-	description := c.FormValue("description")
-	crop := c.FormValue("crop")
-
-	if question == "" || description == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
-			"message": "Question or description cannot be empty",
-			"error":   "Bad request received empty question or description",
-		})
-	}
-
-	post, err := h.postsStore.CreatePost(question, description, userId, &crop, imageUrl)
-
+	post, err := h.handleCreatePost(c, userId, nil)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
-			"message": "Failed to create your post",
+		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
+			"message": "Failed to create post",
 			"error":   err.Error(),
 		})
 	}
+
 	return c.Status(fiber.StatusCreated).JSON(post)
 }
 

@@ -14,6 +14,18 @@ type ChatStore struct {
 	db *gorm.DB
 }
 
+// ShareChat implements chat.Store.
+func (cs *ChatStore) ShareChat(chatId uint) error {
+	chat, err := cs.GetChatById(chatId)
+
+	if err != nil {
+		return err
+	}
+	chat.IsPublic = true
+
+	return cs.db.Save(chat).Error
+}
+
 // SetChatTitle implements chat.Store.
 func (cs *ChatStore) SetChatTitle(title string, chatId uint) error {
 	var chat models.Chat
@@ -66,19 +78,19 @@ func (cs ChatStore) Create(c *models.Chat) (uint, error) {
 }
 
 // GetChatById implements chat.Store.
-func (cs ChatStore) GetChatById(id uint) error {
+func (cs ChatStore) GetChatById(id uint) (*models.Chat, error) {
 	var chat models.Chat
 	err := cs.db.Where("id = ?", id).First(&chat).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return fmt.Errorf("chat not found: %s", err.Error())
+		return nil, fmt.Errorf("chat not found: %s", err.Error())
 	}
 
 	if err != nil {
-		return fmt.Errorf("unexpected error when getting chat by id: %s", err.Error())
+		return nil, fmt.Errorf("unexpected error when getting chat by id: %s", err.Error())
 	}
 
-	return nil
+	return &chat, nil
 }
 
 // GetChatMessages implements chat.Store.

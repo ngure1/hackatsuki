@@ -4,9 +4,10 @@ import "apiv2/internal/models"
 
 type Store interface {
 	Create(*models.Chat) (uint, error)
-	GetChatById(uint) error
+	GetChatById(uint) (*models.Chat, error)
 	// limit and offset
 	GetChatMessages(uint) ([]models.Message, error)
 	GetChats(int, int, uint) ([]models.Chat, int, error)
 	SetChatTitle(title string, chatId uint) error
+	ShareChat(chatId uint) error
 }

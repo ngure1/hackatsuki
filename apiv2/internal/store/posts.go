@@ -158,12 +158,14 @@ func (ps *PostStore) CreatePost(
 	userId uint,
 	crop *string,
 	imageUrl *string,
+	chatUrl *string,
 ) (*models.Post, error) {
 	post := &models.Post{
 		Question:    question,
 		Description: description,
 		Crop:        crop,
 		ImageUrl:    imageUrl,
+		ChatUrl: chatUrl,
 		UserID:      userId,
 	}
 	err := ps.db.Create(post).Error
