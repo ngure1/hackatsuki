@@ -49,6 +49,20 @@ func (h *Handler) GetChats(c *fiber.Ctx) error {
 	})
 }
 
+func (h *Handler) GetChatMessages(c *fiber.Ctx) error {
+	chatId, _ := c.ParamsInt("chatId")
+	userId := c.Locals("userId").(uint)
+	chat, err := h.chatStore.GetChatWithMessages(uint(chatId), userId)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
+			"message": "error retrieveing chat",
+			"error":   err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(chat)
+}
+
 func (h *Handler) ShareChatToCommunity(c *fiber.Ctx) error {
 	chatId, _ := c.ParamsInt("chatId")
 	userId := c.Locals("userId").(uint)

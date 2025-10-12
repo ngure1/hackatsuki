@@ -14,6 +14,26 @@ type ChatStore struct {
 	db *gorm.DB
 }
 
+// GetChatWithMessages implements chat.Store.
+func (cs *ChatStore) GetChatWithMessages(chatId uint, userId uint) (*models.Chat, error) {
+	var chat models.Chat
+	err := cs.db.Where("id = ?", chatId).Preload("Messages").First(&chat).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("unexpected error when getting chat by id: %s", err.Error())
+	}
+
+	if *chat.UserID != userId && !chat.IsPublic {
+		return nil, fmt.Errorf("could not access a chat that you did not create")
+	}
+
+	return &chat, nil
+}
+
 // ShareChat implements chat.Store.
 func (cs *ChatStore) ShareChat(chatId uint) error {
 	chat, err := cs.GetChatById(chatId)

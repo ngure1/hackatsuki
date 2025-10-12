@@ -10,4 +10,5 @@ type Store interface {
 	GetChats(int, int, uint) ([]models.Chat, int, error)
 	SetChatTitle(title string, chatId uint) error
 	ShareChat(chatId uint) error
+	GetChatWithMessages(chatId, userId uint) (*models.Chat,error)
 }

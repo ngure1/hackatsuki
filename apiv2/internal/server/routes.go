@@ -46,6 +46,7 @@ func (s *FiberServer) RegisterFiberRoutes() {
 	chatRoutes.Post("/:chatId/share", h.AuthMiddleware(), h.ShareChatToCommunity)
 	// protected
 	chatRoutes.Get("/", h.AuthMiddleware(), h.GetChats)
+	chatRoutes.Get("/:chatId", h.AuthMiddleware(), h.GetChatMessages)
 
 	// comunity post routes
 	postRoutes := s.Group("/posts")
