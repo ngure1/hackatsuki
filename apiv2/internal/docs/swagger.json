@@ -16,6 +16,192 @@
     "host": "localhost:8080",
     "basePath": "/",
     "paths": {
+        "/chats": {
+            "get": {
+                "description": "Retrieves a paginated list of chats belonging to the authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chats"
+                ],
+                "summary": "List user's chats",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "chats: []responses.ChatMessagesResponse, total_pages: int",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a new chat associated with the authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chats"
+                ],
+                "summary": "Create a new chat",
+                "responses": {
+                    "201": {
+                        "description": "chat_id: int, message: string",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/chats/{chatId}/messages": {
+            "get": {
+                "description": "Retrieve a single chat and all its messages if the user has permission",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chats"
+                ],
+                "summary": "Get chat with messages",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Chat ID",
+                        "name": "chatId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/responses.ChatMessagesResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden: cannot access this chat",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/chats/{chatId}/share": {
+            "post": {
+                "description": "Marks a chat as public and creates a post linking to the shared chat",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chats"
+                ],
+                "summary": "Share a chat to the community",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Chat ID",
+                        "name": "chatId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Post question/title",
+                        "name": "question",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Post description",
+                        "name": "description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Crop or category name",
+                        "name": "crop",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Image to attach to post",
+                        "name": "image",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created post with chat link",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/comments/{commentId}/replies": {
             "get": {
                 "description": "Fetch paginated replies for a given comment",
@@ -703,6 +889,41 @@
                 }
             }
         },
+        "responses.ChatMessagesResponse": {
+            "description": "Chat with metadata and list of messages for API responses.",
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2025-10-12T14:32:00Z"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_public": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "messages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/responses.MessageResponse"
+                    }
+                },
+                "title": {
+                    "type": "string",
+                    "example": "My Chat"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2025-10-12T14:45:00Z"
+                },
+                "user": {
+                    "$ref": "#/definitions/responses.UserResponse"
+                }
+            }
+        },
         "responses.CommentsReponse": {
             "type": "object",
             "properties": {
@@ -726,6 +947,32 @@
                 },
                 "user_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "responses.MessageResponse": {
+            "description": "A message sent in a chat, including sender type and timestamps.",
+            "type": "object",
+            "properties": {
+                "chat_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "content": {
+                    "type": "string",
+                    "example": "Hey, how are you?"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2025-10-12T14:32:00Z"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "msg_123abc"
+                },
+                "sender_type": {
+                    "type": "string",
+                    "example": "user"
                 }
             }
         },

@@ -32,3 +32,25 @@ type PostResponse struct {
 	CommentsCount int64        `json:"comments_count"`
 	LikesCount    int64        `json:"likes_count"`
 }
+
+// MessageResponse represents a single message in a chat conversation.
+// @Description A message sent in a chat, including sender type and timestamps.
+type MessageResponse struct {
+	ID         string    `json:"id"          example:"msg_123abc"`
+	Content    string    `json:"content"     example:"Hey, how are you?"`
+	SenderType string    `json:"sender_type" example:"user"`
+	ChatID     uint      `json:"chat_id"     example:"1"`
+	CreatedAt  time.Time `json:"created_at"  example:"2025-10-12T14:32:00Z"`
+}
+
+// ChatMessagesResponse represents a chat and its associated messages.
+// @Description Chat with metadata and list of messages for API responses.
+type ChatMessagesResponse struct {
+	ID        uint              `json:"id"         example:"1"`
+	Title     string            `json:"title"      example:"My Chat"`
+	IsPublic  bool              `json:"is_public"  example:"true"`
+	User      UserResponse      `json:"user"`
+	Messages  []MessageResponse `json:"messages"`
+	CreatedAt string            `json:"created_at" example:"2025-10-12T14:32:00Z"`
+	UpdatedAt string            `json:"updated_at" example:"2025-10-12T14:45:00Z"`
+}

@@ -30,6 +30,31 @@ definitions:
       phone_number:
         type: string
     type: object
+  responses.ChatMessagesResponse:
+    description: Chat with metadata and list of messages for API responses.
+    properties:
+      created_at:
+        example: "2025-10-12T14:32:00Z"
+        type: string
+      id:
+        example: 1
+        type: integer
+      is_public:
+        example: true
+        type: boolean
+      messages:
+        items:
+          $ref: '#/definitions/responses.MessageResponse'
+        type: array
+      title:
+        example: My Chat
+        type: string
+      updated_at:
+        example: "2025-10-12T14:45:00Z"
+        type: string
+      user:
+        $ref: '#/definitions/responses.UserResponse'
+    type: object
   responses.CommentsReponse:
     properties:
       content:
@@ -46,6 +71,25 @@ definitions:
         type: integer
       user_id:
         type: integer
+    type: object
+  responses.MessageResponse:
+    description: A message sent in a chat, including sender type and timestamps.
+    properties:
+      chat_id:
+        example: 1
+        type: integer
+      content:
+        example: Hey, how are you?
+        type: string
+      created_at:
+        example: "2025-10-12T14:32:00Z"
+        type: string
+      id:
+        example: msg_123abc
+        type: string
+      sender_type:
+        example: user
+        type: string
     type: object
   responses.PostResponse:
     properties:
@@ -87,6 +131,132 @@ info:
   title: Hackatsuki api
   version: "1.0"
 paths:
+  /chats:
+    get:
+      description: Retrieves a paginated list of chats belonging to the authenticated
+        user
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'chats: []responses.ChatMessagesResponse, total_pages: int'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List user's chats
+      tags:
+      - Chats
+    post:
+      description: Creates a new chat associated with the authenticated user
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 'chat_id: int, message: string'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a new chat
+      tags:
+      - Chats
+  /chats/{chatId}/messages:
+    get:
+      description: Retrieve a single chat and all its messages if the user has permission
+      parameters:
+      - description: Chat ID
+        in: path
+        name: chatId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.ChatMessagesResponse'
+        "403":
+          description: 'Forbidden: cannot access this chat'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get chat with messages
+      tags:
+      - Chats
+  /chats/{chatId}/share:
+    post:
+      description: Marks a chat as public and creates a post linking to the shared
+        chat
+      parameters:
+      - description: Chat ID
+        in: path
+        name: chatId
+        required: true
+        type: integer
+      - description: Post question/title
+        in: formData
+        name: question
+        type: string
+      - description: Post description
+        in: formData
+        name: description
+        type: string
+      - description: Crop or category name
+        in: formData
+        name: crop
+        type: string
+      - description: Image to attach to post
+        in: formData
+        name: image
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created post with chat link
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Share a chat to the community
+      tags:
+      - Chats
   /comments/{commentId}/replies:
     get:
       consumes:
