@@ -25,6 +25,11 @@ definitions:
       password:
         type: string
     type: object
+  requests.UpdatePhoneNumberRequest:
+    properties:
+      phone_number:
+        type: string
+    type: object
   responses.CommentsReponse:
     properties:
       content:
@@ -233,6 +238,29 @@ paths:
       tags:
       - Posts
   /posts/{postId}:
+    delete:
+      parameters:
+      - description: Post ID
+        in: path
+        name: postId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            type: string
+        "500":
+          description: Failed to Delete post
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a post
+      tags:
+      - Posts
     get:
       consumes:
       - application/json
@@ -447,4 +475,42 @@ paths:
       summary: Register a new user
       tags:
       - Auth
+  /users:
+    patch:
+      consumes:
+      - application/json
+      description: Updates the logged in users phone number
+      parameters:
+      - description: Phone number to use
+        in: body
+        name: phoneNumber
+        required: true
+        schema:
+          $ref: '#/definitions/requests.UpdatePhoneNumberRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Unauthenticated
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: User not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update the users phone number
+      tags:
+      - Users
 swagger: "2.0"

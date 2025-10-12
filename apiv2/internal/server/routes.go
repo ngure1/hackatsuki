@@ -37,6 +37,8 @@ func (s *FiberServer) RegisterFiberRoutes() {
 	s.Get("/oauth/google", h.GoogleAuthHandler)
 	s.Get("/oauth/redirect", h.GoogleAuthRedirectHandler)
 
+	s.Patch("/users", h.AuthMiddleware(), h.UpdatePhoneNumber)
+
 	//chat routes
 	chatRoutes := s.Group("/chats")
 	chatRoutes.Post("/", h.OptionalAuthMiddleware(), h.CreateChat)
