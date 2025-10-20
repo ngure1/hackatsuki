@@ -31,3 +31,14 @@ type CreateCommentRequest struct {
 	Content         string `json:"content"`
 	ParentCommentId *uint  `json:"parent_comment_id"`
 }
+
+// Blog requests
+type CreateBlogRequest struct {
+	Title   string `json:"title"`
+	Content string `json:"content"`
+}
+
+type CreateBlogCommentRequest struct {
+	Content         string `json:"content"`
+	ParentCommentId *uint  `json:"parent_comment_id"`
+}

@@ -35,3 +35,33 @@ type Like struct {
 	PostId uint `json:"post_id" gorm:"primaryKey;autoIncrement:false"`
 	UserID uint `json:"user_id" gorm:"primaryKey;autoIncrement:false"`
 }
+
+// Blog
+type Blog struct {
+	gorm.Model
+
+	Title   string `json:"title"`
+	Content string `json:"content"` // HTML content for rich text blogs
+
+	UserID       uint          `json:"user_id" gorm:"index"`
+	User         User          `json:"user"    gorm:"foreignkey:UserID"`
+	BlogComments []BlogComment `json:"-"`
+	BlogLikes    []BlogLike    `json:"-"`
+}
+
+// Blog comments
+type BlogComment struct {
+	gorm.Model
+	Content string `json:"content"`
+
+	ParentCommentId *uint         `json:"parent_comment_id"`
+	BlogId          uint          `json:"blog_id"           gorm:"index"`
+	UserID          uint          `json:"user_id"`
+	Replies         []BlogComment `json:"-"                 gorm:"foreignkey:ParentCommentId"`
+}
+
+// Blog like
+type BlogLike struct {
+	BlogId uint `json:"blog_id" gorm:"primaryKey;autoIncrement:false"`
+	UserID uint `json:"user_id" gorm:"primaryKey;autoIncrement:false"`
+}

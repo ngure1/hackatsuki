@@ -54,3 +54,25 @@ type ChatMessagesResponse struct {
 	CreatedAt string            `json:"created_at" example:"2025-10-12T14:32:00Z"`
 	UpdatedAt string            `json:"updated_at" example:"2025-10-12T14:45:00Z"`
 }
+
+// Blog responses
+type BlogCommentsResponse struct {
+	ID              uint      `json:"id"`
+	Content         string    `json:"content"`
+	ParentCommentId *uint     `json:"parent_comment_id"`
+	BlogId          uint      `json:"blog_id"`
+	UserID          uint      `json:"user_id"`
+	CreatedAt       time.Time `json:"created_at"`
+	RepliesCount    int64     `json:"replies_count"`
+}
+
+type BlogResponse struct {
+	ID            uint         `json:"id"`
+	Title         string       `json:"title"`
+	Content       string       `json:"content"`
+	User          UserResponse `json:"user"`
+	CommentsCount int64        `json:"comments_count"`
+	LikesCount    int64        `json:"likes_count"`
+	CreatedAt     time.Time    `json:"created_at"`
+	UpdatedAt     time.Time    `json:"updated_at"`
+}

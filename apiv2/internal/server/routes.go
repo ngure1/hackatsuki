@@ -26,7 +26,8 @@ func (s *FiberServer) RegisterFiberRoutes() {
 	ms := store.NewMessageStore(db)
 	us := store.NewUserStore(db)
 	ps := store.NewPostStore(db)
-	h := handlers.New(cs, ms, us, ps)
+	bs := store.NewBlogStore(db)
+	h := handlers.New(cs, ms, us, ps, bs)
 
 	// Swagger route
 	s.Get("/swagger/*", fiberSwagger.WrapHandler)
@@ -48,7 +49,7 @@ func (s *FiberServer) RegisterFiberRoutes() {
 	chatRoutes.Get("/", h.AuthMiddleware(), h.GetChats)
 	chatRoutes.Get("/:chatId/messages", h.AuthMiddleware(), h.GetChatMessages)
 
-	// comunity post routes
+	// community post routes
 	postRoutes := s.Group("/posts")
 	postRoutes.Get("/", h.GetPosts)
 	postRoutes.Get("/:postId", h.GetPost)
@@ -59,7 +60,22 @@ func (s *FiberServer) RegisterFiberRoutes() {
 	postRoutes.Post("/:postId/comments", h.AuthMiddleware(), h.CommentOnPost)
 	postRoutes.Get("/:postId/comments", h.AuthMiddleware(), h.GetComments)
 
-	// comment  routes
+	// blog routes
+	blogRoutes := s.Group("/blogs")
+	blogRoutes.Get("/", h.GetBlogs)
+	blogRoutes.Get("/:blogId", h.GetBlog)
+	//protected
+	blogRoutes.Post("/", h.AuthMiddleware(), h.CreateBlog)
+	blogRoutes.Delete("/:blogId", h.AuthMiddleware(), h.DeleteBlog)
+	blogRoutes.Post("/:blogId/likes", h.AuthMiddleware(), h.LikeBlog)
+	blogRoutes.Post("/:blogId/comments", h.AuthMiddleware(), h.CommentOnBlog)
+	blogRoutes.Get("/:blogId/comments", h.AuthMiddleware(), h.GetBlogComments)
+
+	// comment routes
 	commentRoutes := s.Group("/comments", h.AuthMiddleware())
 	commentRoutes.Get("/:commentId/replies", h.GetCommentReplies)
+
+	// blog comment routes
+	blogCommentRoutes := s.Group("/blog-comments", h.AuthMiddleware())
+	blogCommentRoutes.Get("/:commentId/replies", h.GetBlogCommentReplies)
 }

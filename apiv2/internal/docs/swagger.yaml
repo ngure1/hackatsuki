@@ -1,5 +1,19 @@
 basePath: /
 definitions:
+  requests.CreateBlogCommentRequest:
+    properties:
+      content:
+        type: string
+      parent_comment_id:
+        type: integer
+    type: object
+  requests.CreateBlogRequest:
+    properties:
+      content:
+        type: string
+      title:
+        type: string
+    type: object
   requests.CreateCommentRequest:
     properties:
       content:
@@ -29,6 +43,42 @@ definitions:
     properties:
       phone_number:
         type: string
+    type: object
+  responses.BlogCommentsResponse:
+    properties:
+      blog_id:
+        type: integer
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      parent_comment_id:
+        type: integer
+      replies_count:
+        type: integer
+      user_id:
+        type: integer
+    type: object
+  responses.BlogResponse:
+    properties:
+      comments_count:
+        type: integer
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      likes_count:
+        type: integer
+      title:
+        type: string
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/responses.UserResponse'
     type: object
   responses.ChatMessagesResponse:
     description: Chat with metadata and list of messages for API responses.
@@ -131,6 +181,261 @@ info:
   title: Hackatsuki api
   version: "1.0"
 paths:
+  /blog-comments/{commentId}/replies:
+    get:
+      consumes:
+      - application/json
+      description: Fetch paginated replies for a given blog comment
+      parameters:
+      - description: Comment ID
+        in: path
+        name: commentId
+        required: true
+        type: integer
+      - description: Page number (default 1)
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'replies: []responses.BlogCommentsResponse, totalPages: int'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid comment ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get replies to a blog comment
+      tags:
+      - Blogs
+  /blogs:
+    get:
+      description: Retrieve paginated list of blogs
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'blogs: []responses.BlogResponse, total_pages: int'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List blogs
+      tags:
+      - Blogs
+    post:
+      consumes:
+      - application/json
+      description: Create a new blog with title and content
+      parameters:
+      - description: Blog creation request
+        in: body
+        name: blog
+        required: true
+        schema:
+          $ref: '#/definitions/requests.CreateBlogRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/responses.BlogResponse'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a blog
+      tags:
+      - Blogs
+  /blogs/{blogId}:
+    delete:
+      parameters:
+      - description: Blog ID
+        in: path
+        name: blogId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            type: string
+        "500":
+          description: Failed to Delete blog
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a blog
+      tags:
+      - Blogs
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a blog by its ID
+      parameters:
+      - description: Blog ID
+        in: path
+        name: blogId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.BlogResponse'
+        "404":
+          description: Blog not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get a single blog
+      tags:
+      - Blogs
+  /blogs/{blogId}/comments:
+    get:
+      consumes:
+      - application/json
+      description: Fetch paginated comments for a given blog
+      parameters:
+      - description: Blog ID
+        in: path
+        name: blogId
+        required: true
+        type: integer
+      - description: Page number (default 1)
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'comments: []responses.BlogCommentsResponse, totalPages: int'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid blog ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get comments on a blog
+      tags:
+      - Blogs
+    post:
+      consumes:
+      - application/json
+      description: Creates a comment on a specific blog. Supports replying to another
+        comment if `parent_comment_id` is provided.
+      parameters:
+      - description: Blog ID
+        in: path
+        name: blogId
+        required: true
+        type: integer
+      - description: Comment request body
+        in: body
+        name: comment
+        required: true
+        schema:
+          $ref: '#/definitions/requests.CreateBlogCommentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/responses.BlogCommentsResponse'
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Add a comment to a blog
+      tags:
+      - Blogs
+  /blogs/{blogId}/likes:
+    post:
+      description: Like a blog by ID
+      parameters:
+      - description: Blog ID
+        in: path
+        name: blogId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            type: string
+        "500":
+          description: Failed to like blog
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Like a blog
+      tags:
+      - Blogs
   /chats:
     get:
       description: Retrieves a paginated list of chats belonging to the authenticated
