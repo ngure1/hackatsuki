@@ -16,7 +16,7 @@ type PostStore struct {
 
 // DeletePost implements posts.Store.
 func (ps *PostStore) DeletePost(postId uint, userId uint) error {
-	post, err := ps.GetPost(postId)
+	post, err := ps.GetPost(postId, &userId)
 	if err != nil {
 		return err
 	}
@@ -137,18 +137,35 @@ func (ps *PostStore) CreateComment(
 	return comment, nil
 }
 
-// LikePost implements posts.Store.
-func (ps *PostStore) LikePost(postId uint, userId uint) error {
-	like := &models.Like{
-		PostId: postId,
-		UserID: userId,
-	}
-	err := ps.db.Create(like).Error
-	if err != nil {
-		return err
+// ToggleLikePost implements posts.Store.
+func (ps *PostStore) ToggleLikePost(postId uint, userId uint) (bool, error) {
+	var existingLike models.Like
+	err := ps.db.Where("post_id = ? AND user_id = ?", postId, userId).First(&existingLike).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		// Like doesn't exist, create it
+		like := &models.Like{
+			PostId: postId,
+			UserID: userId,
+		}
+		err = ps.db.Create(like).Error
+		if err != nil {
+			return false, err
+		}
+		return true, nil // liked
 	}
 
-	return nil
+	if err != nil {
+		return false, err
+	}
+
+	// Like exists, delete it (unlike)
+	err = ps.db.Delete(&existingLike).Error
+	if err != nil {
+		return false, err
+	}
+
+	return false, nil // unliked
 }
 
 // CreatePost implements posts.Store.
@@ -165,7 +182,7 @@ func (ps *PostStore) CreatePost(
 		Description: description,
 		Crop:        crop,
 		ImageUrl:    imageUrl,
-		ChatUrl: chatUrl,
+		ChatUrl:     chatUrl,
 		UserID:      userId,
 	}
 	err := ps.db.Create(post).Error
@@ -177,7 +194,7 @@ func (ps *PostStore) CreatePost(
 }
 
 // GetPost implements posts.Store.
-func (ps *PostStore) GetPost(postId uint) (*responses.PostResponse, error) {
+func (ps *PostStore) GetPost(postId uint, userId *uint) (*responses.PostResponse, error) {
 	var post models.Post
 	err := ps.db.Preload("Comments").Preload("User").Preload("Likes").Where("id = ?", postId).First(&post).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -195,6 +212,17 @@ func (ps *PostStore) GetPost(postId uint) (*responses.PostResponse, error) {
 		LastName:  post.User.LastName,
 	}
 
+	// Check if user has liked this post
+	isLiked := false
+	if userId != nil {
+		for _, like := range post.Likes {
+			if like.UserID == *userId {
+				isLiked = true
+				break
+			}
+		}
+	}
+
 	postResp := &responses.PostResponse{
 		ID:            post.ID,
 		Question:      post.Question,
@@ -204,13 +232,16 @@ func (ps *PostStore) GetPost(postId uint) (*responses.PostResponse, error) {
 		User:          user,
 		CommentsCount: int64(commentCount),
 		LikesCount:    int64(likesCount),
+		IsLiked:       isLiked,
+		CreatedAt:     post.CreatedAt,
+		UpdatedAt:     post.UpdatedAt,
 	}
 
 	return postResp, nil
 }
 
 // GetPosts implements posts.Store.
-func (ps *PostStore) GetPosts(page int, limit int) ([]responses.PostResponse, int, error) {
+func (ps *PostStore) GetPosts(page int, limit int, userId *uint) ([]responses.PostResponse, int, error) {
 	var posts []models.Post
 	var response []responses.PostResponse
 	var totalCount int64
@@ -220,7 +251,8 @@ func (ps *PostStore) GetPosts(page int, limit int) ([]responses.PostResponse, in
 	}
 
 	offset := utils.GetOffset(page, limit)
-	err := ps.db.Preload("Comments").Preload("User").Preload("Likes").Limit(limit).Offset(offset).Find(&posts).Error
+	err := ps.db.Preload("Comments").Preload("User").Preload("Likes").
+		Limit(limit).Offset(offset).Order("created_at DESC").Find(&posts).Error
 
 	for _, post := range posts {
 		commentCount := len(post.Comments)
@@ -229,6 +261,17 @@ func (ps *PostStore) GetPosts(page int, limit int) ([]responses.PostResponse, in
 			ID:        post.User.ID,
 			FirstName: post.User.FirstName,
 			LastName:  post.User.LastName,
+		}
+
+		// Check if user has liked this post
+		isLiked := false
+		if userId != nil {
+			for _, like := range post.Likes {
+				if like.UserID == *userId {
+					isLiked = true
+					break
+				}
+			}
 		}
 
 		postResp := &responses.PostResponse{
@@ -240,6 +283,9 @@ func (ps *PostStore) GetPosts(page int, limit int) ([]responses.PostResponse, in
 			User:          user,
 			CommentsCount: int64(commentCount),
 			LikesCount:    int64(likesCount),
+			IsLiked:       isLiked,
+			CreatedAt:     post.CreatedAt,
+			UpdatedAt:     post.UpdatedAt,
 		}
 		response = append(response, *postResp)
 	}

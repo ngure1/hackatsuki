@@ -16,7 +16,7 @@ type BlogStore struct {
 
 // DeleteBlog implements blogs.Store.
 func (bs *BlogStore) DeleteBlog(blogId uint, userId uint) error {
-	blog, err := bs.GetBlog(blogId)
+	blog, err := bs.GetBlog(blogId, &userId)
 	if err != nil {
 		return err
 	}
@@ -137,18 +137,35 @@ func (bs *BlogStore) CreateBlogComment(
 	return comment, nil
 }
 
-// LikeBlog implements blogs.Store.
-func (bs *BlogStore) LikeBlog(blogId uint, userId uint) error {
-	like := &models.BlogLike{
-		BlogId: blogId,
-		UserID: userId,
-	}
-	err := bs.db.Create(like).Error
-	if err != nil {
-		return err
+// ToggleLikeBlog implements blogs.Store.
+func (bs *BlogStore) ToggleLikeBlog(blogId uint, userId uint) (bool, error) {
+	var existingLike models.BlogLike
+	err := bs.db.Where("blog_id = ? AND user_id = ?", blogId, userId).First(&existingLike).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		// Like doesn't exist, create it
+		like := &models.BlogLike{
+			BlogId: blogId,
+			UserID: userId,
+		}
+		err = bs.db.Create(like).Error
+		if err != nil {
+			return false, err
+		}
+		return true, nil // liked
 	}
 
-	return nil
+	if err != nil {
+		return false, err
+	}
+
+	// Like exists, delete it (unlike)
+	err = bs.db.Delete(&existingLike).Error
+	if err != nil {
+		return false, err
+	}
+
+	return false, nil // unliked
 }
 
 // CreateBlog implements blogs.Store.
@@ -171,7 +188,7 @@ func (bs *BlogStore) CreateBlog(
 }
 
 // GetBlog implements blogs.Store.
-func (bs *BlogStore) GetBlog(blogId uint) (*responses.BlogResponse, error) {
+func (bs *BlogStore) GetBlog(blogId uint, userId *uint) (*responses.BlogResponse, error) {
 	var blog models.Blog
 	err := bs.db.Preload("BlogComments").Preload("User").Preload("BlogLikes").Where("id = ?", blogId).First(&blog).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -189,6 +206,17 @@ func (bs *BlogStore) GetBlog(blogId uint) (*responses.BlogResponse, error) {
 		LastName:  blog.User.LastName,
 	}
 
+	// Check if user has liked this blog
+	isLiked := false
+	if userId != nil {
+		for _, like := range blog.BlogLikes {
+			if like.UserID == *userId {
+				isLiked = true
+				break
+			}
+		}
+	}
+
 	blogResp := &responses.BlogResponse{
 		ID:            blog.ID,
 		Title:         blog.Title,
@@ -196,6 +224,7 @@ func (bs *BlogStore) GetBlog(blogId uint) (*responses.BlogResponse, error) {
 		User:          user,
 		CommentsCount: int64(commentCount),
 		LikesCount:    int64(likesCount),
+		IsLiked:       isLiked,
 		CreatedAt:     blog.CreatedAt,
 		UpdatedAt:     blog.UpdatedAt,
 	}
@@ -204,7 +233,7 @@ func (bs *BlogStore) GetBlog(blogId uint) (*responses.BlogResponse, error) {
 }
 
 // GetBlogs implements blogs.Store.
-func (bs *BlogStore) GetBlogs(page int, limit int) ([]responses.BlogResponse, int, error) {
+func (bs *BlogStore) GetBlogs(page int, limit int, userId *uint) ([]responses.BlogResponse, int, error) {
 	var blogs []models.Blog
 	var response []responses.BlogResponse
 	var totalCount int64
@@ -226,6 +255,17 @@ func (bs *BlogStore) GetBlogs(page int, limit int) ([]responses.BlogResponse, in
 			LastName:  blog.User.LastName,
 		}
 
+		// Check if user has liked this blog
+		isLiked := false
+		if userId != nil {
+			for _, like := range blog.BlogLikes {
+				if like.UserID == *userId {
+					isLiked = true
+					break
+				}
+			}
+		}
+
 		blogResp := &responses.BlogResponse{
 			ID:            blog.ID,
 			Title:         blog.Title,
@@ -233,6 +273,7 @@ func (bs *BlogStore) GetBlogs(page int, limit int) ([]responses.BlogResponse, in
 			User:          user,
 			CommentsCount: int64(commentCount),
 			LikesCount:    int64(likesCount),
+			IsLiked:       isLiked,
 			CreatedAt:     blog.CreatedAt,
 			UpdatedAt:     blog.UpdatedAt,
 		}

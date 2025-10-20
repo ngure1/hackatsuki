@@ -31,6 +31,9 @@ type PostResponse struct {
 	User          UserResponse `json:"user"`
 	CommentsCount int64        `json:"comments_count"`
 	LikesCount    int64        `json:"likes_count"`
+	IsLiked       bool         `json:"is_liked"`
+	CreatedAt     time.Time    `json:"created_at"`
+	UpdatedAt     time.Time    `json:"updated_at"`
 }
 
 // MessageResponse represents a single message in a chat conversation.
@@ -73,6 +76,7 @@ type BlogResponse struct {
 	User          UserResponse `json:"user"`
 	CommentsCount int64        `json:"comments_count"`
 	LikesCount    int64        `json:"likes_count"`
+	IsLiked       bool         `json:"is_liked"`
 	CreatedAt     time.Time    `json:"created_at"`
 	UpdatedAt     time.Time    `json:"updated_at"`
 }

@@ -369,14 +369,14 @@ const docTemplate = `{
         },
         "/blogs/{blogId}/likes": {
             "post": {
-                "description": "Like a blog by ID",
+                "description": "Like or unlike a blog by ID (toggles the like status)",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Blogs"
                 ],
-                "summary": "Like a blog",
+                "summary": "Toggle like on a blog",
                 "parameters": [
                     {
                         "type": "integer",
@@ -388,13 +388,14 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "ok",
+                        "description": "liked: bool, message: string",
                         "schema": {
-                            "type": "string"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "500": {
-                        "description": "Failed to like blog",
+                        "description": "Failed to toggle like on blog",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -1016,14 +1017,14 @@ const docTemplate = `{
         },
         "/posts/{postId}/likes": {
             "post": {
-                "description": "Like a post by ID",
+                "description": "Like or unlike a post by ID (toggles the like status)",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Posts"
                 ],
-                "summary": "Like a post",
+                "summary": "Toggle like on a post",
                 "parameters": [
                     {
                         "type": "integer",
@@ -1035,13 +1036,14 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "ok",
+                        "description": "liked: bool, message: string",
                         "schema": {
-                            "type": "string"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "500": {
-                        "description": "Failed to like post",
+                        "description": "Failed to toggle like on post",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -1341,6 +1343,9 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
+                "is_liked": {
+                    "type": "boolean"
+                },
                 "likes_count": {
                     "type": "integer"
                 },
@@ -1448,6 +1453,9 @@ const docTemplate = `{
                 "comments_count": {
                     "type": "integer"
                 },
+                "created_at": {
+                    "type": "string"
+                },
                 "crop": {
                     "type": "string"
                 },
@@ -1460,10 +1468,16 @@ const docTemplate = `{
                 "image_url": {
                     "type": "string"
                 },
+                "is_liked": {
+                    "type": "boolean"
+                },
                 "likes_count": {
                     "type": "integer"
                 },
                 "question": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 },
                 "user": {

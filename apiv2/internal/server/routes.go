@@ -51,8 +51,8 @@ func (s *FiberServer) RegisterFiberRoutes() {
 
 	// community post routes
 	postRoutes := s.Group("/posts")
-	postRoutes.Get("/", h.GetPosts)
-	postRoutes.Get("/:postId", h.GetPost)
+	postRoutes.Get("/", h.OptionalAuthMiddleware(), h.GetPosts) // Use optional auth to get isLiked
+	postRoutes.Get("/:postId", h.OptionalAuthMiddleware(), h.GetPost) // Use optional auth to get isLiked
 	//protected
 	postRoutes.Post("/", h.AuthMiddleware(), h.CreatePost)
 	postRoutes.Delete("/:postId", h.AuthMiddleware(), h.DeletePost)
@@ -62,8 +62,8 @@ func (s *FiberServer) RegisterFiberRoutes() {
 
 	// blog routes
 	blogRoutes := s.Group("/blogs")
-	blogRoutes.Get("/", h.GetBlogs)
-	blogRoutes.Get("/:blogId", h.GetBlog)
+	blogRoutes.Get("/", h.OptionalAuthMiddleware(), h.GetBlogs) // Use optional auth to get isLiked
+	blogRoutes.Get("/:blogId", h.OptionalAuthMiddleware(), h.GetBlog) // Use optional auth to get isLiked
 	//protected
 	blogRoutes.Post("/", h.AuthMiddleware(), h.CreateBlog)
 	blogRoutes.Delete("/:blogId", h.AuthMiddleware(), h.DeleteBlog)

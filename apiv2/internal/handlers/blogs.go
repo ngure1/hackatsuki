@@ -21,7 +21,15 @@ import (
 // @Router /blogs [get]
 func (h *Handler) GetBlogs(c *fiber.Ctx) error {
 	page := c.QueryInt("page", 1)
-	blogs, totalPages, err := h.blogsStore.GetBlogs(page, postsPerPage)
+
+	// Get userId from context if available (optional auth)
+	var userId *uint = nil
+	if userIdValue := c.Locals("userId"); userIdValue != nil {
+		userIdUint := userIdValue.(uint)
+		userId = &userIdUint
+	}
+
+	blogs, totalPages, err := h.blogsStore.GetBlogs(page, postsPerPage, userId)
 
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
@@ -57,7 +65,14 @@ func (h *Handler) GetBlog(c *fiber.Ctx) error {
 		})
 	}
 
-	blog, err := h.blogsStore.GetBlog(uint(blogId))
+	// Get userId from context if available (optional auth)
+	var userId *uint = nil
+	if userIdValue := c.Locals("userId"); userIdValue != nil {
+		userIdUint := userIdValue.(uint)
+		userId = &userIdUint
+	}
+
+	blog, err := h.blogsStore.GetBlog(uint(blogId), userId)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return c.Status(fiber.StatusNotFound).JSON(&fiber.Map{
 			"message": "blog with that id does not exist",
@@ -148,26 +163,35 @@ func (h *Handler) DeleteBlog(c *fiber.Ctx) error {
 }
 
 // LikeBlog godoc
-// @Summary Like a blog
-// @Description Like a blog by ID
+// @Summary Toggle like on a blog
+// @Description Like or unlike a blog by ID (toggles the like status)
 // @Tags Blogs
 // @Produce json
 // @Param blogId path int true "Blog ID"
-// @Success 200 {string} string "ok"
-// @Failure 500 {object} map[string]string "Failed to like blog"
+// @Success 200 {object} map[string]interface{} "liked: bool, message: string"
+// @Failure 500 {object} map[string]string "Failed to toggle like on blog"
 // @Router /blogs/{blogId}/likes [post]
 func (h *Handler) LikeBlog(c *fiber.Ctx) error {
 	userId := c.Locals("userId").(uint)
 	blogId, _ := c.ParamsInt("blogId")
 
-	err := h.blogsStore.LikeBlog(uint(blogId), userId)
+	isLiked, err := h.blogsStore.ToggleLikeBlog(uint(blogId), userId)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
-			"message": "Failed to like blog",
+			"message": "Failed to toggle like on blog",
 			"error":   err.Error(),
 		})
 	}
-	return c.SendStatus(fiber.StatusOK)
+
+	message := "Blog liked successfully"
+	if !isLiked {
+		message = "Blog unliked successfully"
+	}
+
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		"liked":   isLiked,
+		"message": message,
+	})
 }
 
 // CommentOnBlog godoc

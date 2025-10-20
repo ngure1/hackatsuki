@@ -71,6 +71,8 @@ definitions:
         type: string
       id:
         type: integer
+      is_liked:
+        type: boolean
       likes_count:
         type: integer
       title:
@@ -145,6 +147,8 @@ definitions:
     properties:
       comments_count:
         type: integer
+      created_at:
+        type: string
       crop:
         type: string
       description:
@@ -153,9 +157,13 @@ definitions:
         type: integer
       image_url:
         type: string
+      is_liked:
+        type: boolean
       likes_count:
         type: integer
       question:
+        type: string
+      updated_at:
         type: string
       user:
         $ref: '#/definitions/responses.UserResponse'
@@ -413,7 +421,7 @@ paths:
       - Blogs
   /blogs/{blogId}/likes:
     post:
-      description: Like a blog by ID
+      description: Like or unlike a blog by ID (toggles the like status)
       parameters:
       - description: Blog ID
         in: path
@@ -424,16 +432,17 @@ paths:
       - application/json
       responses:
         "200":
-          description: ok
+          description: 'liked: bool, message: string'
           schema:
-            type: string
+            additionalProperties: true
+            type: object
         "500":
-          description: Failed to like blog
+          description: Failed to toggle like on blog
           schema:
             additionalProperties:
               type: string
             type: object
-      summary: Like a blog
+      summary: Toggle like on a blog
       tags:
       - Blogs
   /chats:
@@ -847,7 +856,7 @@ paths:
       - Comments
   /posts/{postId}/likes:
     post:
-      description: Like a post by ID
+      description: Like or unlike a post by ID (toggles the like status)
       parameters:
       - description: Post ID
         in: path
@@ -858,16 +867,17 @@ paths:
       - application/json
       responses:
         "200":
-          description: ok
+          description: 'liked: bool, message: string'
           schema:
-            type: string
+            additionalProperties: true
+            type: object
         "500":
-          description: Failed to like post
+          description: Failed to toggle like on post
           schema:
             additionalProperties:
               type: string
             type: object
-      summary: Like a post
+      summary: Toggle like on a post
       tags:
       - Posts
   /signin:

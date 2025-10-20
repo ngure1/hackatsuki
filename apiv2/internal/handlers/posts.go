@@ -48,7 +48,15 @@ func (h *Handler) handleCreatePost(c *fiber.Ctx, userId uint, chatUrl *string) (
 // @Router /posts [get]
 func (h *Handler) GetPosts(c *fiber.Ctx) error {
 	page := c.QueryInt("page", 1)
-	posts, totalPages, err := h.postsStore.GetPosts(page, postsPerPage)
+
+	// Get userId from context if available (optional auth)
+	var userId *uint = nil
+	if userIdValue := c.Locals("userId"); userIdValue != nil {
+		userIdUint := userIdValue.(uint)
+		userId = &userIdUint
+	}
+
+	posts, totalPages, err := h.postsStore.GetPosts(page, postsPerPage, userId)
 
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
@@ -84,7 +92,14 @@ func (h *Handler) GetPost(c *fiber.Ctx) error {
 		})
 	}
 
-	post, err := h.postsStore.GetPost(uint(postId))
+	// Get userId from context if available (optional auth)
+	var userId *uint = nil
+	if userIdValue := c.Locals("userId"); userIdValue != nil {
+		userIdUint := userIdValue.(uint)
+		userId = &userIdUint
+	}
+
+	post, err := h.postsStore.GetPost(uint(postId), userId)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return c.Status(fiber.StatusNotFound).JSON(&fiber.Map{
 			"message": "post with that id does not exist",
@@ -163,24 +178,33 @@ func (h *Handler) DeletePost(c *fiber.Ctx) error {
 }
 
 // LikePost godoc
-// @Summary Like a post
-// @Description Like a post by ID
+// @Summary Toggle like on a post
+// @Description Like or unlike a post by ID (toggles the like status)
 // @Tags Posts
 // @Produce json
 // @Param postId path int true "Post ID"
-// @Success 200 {string} string "ok"
-// @Failure 500 {object} map[string]string "Failed to like post"
+// @Success 200 {object} map[string]interface{} "liked: bool, message: string"
+// @Failure 500 {object} map[string]string "Failed to toggle like on post"
 // @Router /posts/{postId}/likes [post]
 func (h *Handler) LikePost(c *fiber.Ctx) error {
 	userId := c.Locals("userId").(uint)
 	postId, _ := c.ParamsInt("postId")
 
-	err := h.postsStore.LikePost(uint(postId), userId)
+	isLiked, err := h.postsStore.ToggleLikePost(uint(postId), userId)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
-			"message": "Failed to like post",
+			"message": "Failed to toggle like on post",
 			"error":   err.Error(),
 		})
 	}
-	return c.SendStatus(fiber.StatusOK)
+
+	message := "Post liked successfully"
+	if !isLiked {
+		message = "Post unliked successfully"
+	}
+
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		"liked":   isLiked,
+		"message": message,
+	})
 }
