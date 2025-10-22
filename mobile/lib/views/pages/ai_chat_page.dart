@@ -17,6 +17,7 @@ class AiChatPage extends StatefulWidget {
 
 class _AiChatPageState extends State<AiChatPage> {
   final TextEditingController _inputController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   bool _isInitialized = false;
 
   @override
@@ -74,6 +75,7 @@ class _AiChatPageState extends State<AiChatPage> {
   @override
   void dispose() {
     _inputController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -88,8 +90,15 @@ class _AiChatPageState extends State<AiChatPage> {
     final messageProvider = context.read<MessageProvider>();
     final text = _inputController.text.trim();
 
-    print("DEBUG: Send button pressed - text: '$text', image: ${imageProvider.selectedImage != null}");
-    
+    print(
+      "DEBUG: Send button pressed - text: '$text', image: ${imageProvider.selectedImage != null}",
+    );
+
+    if (messageProvider.isLoading && messageProvider.activeChatId != null) {
+      messageProvider.cancelStreamForChat(messageProvider.activeChatId!);
+      return;
+    }
+
     if (text.isEmpty && imageProvider.selectedImage == null) return;
 
     messageProvider.sendUserMessage(text, image: imageProvider.selectedImage);
@@ -97,6 +106,26 @@ class _AiChatPageState extends State<AiChatPage> {
     _inputController.clear();
     imageProvider.clear();
   }
+
+  void _scrollListener() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+            _scrollController.animateTo(
+                _scrollController.position.maxScrollExtent,
+                duration: const Duration(milliseconds: 150),
+                curve: Curves.easeOut,
+            );
+        }
+    });
+}
+
+@override
+void didChangeDependencies() {
+    super.didChangeDependencies();
+    
+    final messageProvider = context.watch<MessageProvider>();
+    messageProvider.addListener(_scrollListener);
+}
 
   Widget _buildInputBar() {
     return Consumer2<ImageProviderNotifier, MessageProvider>(
@@ -150,6 +179,7 @@ class _AiChatPageState extends State<AiChatPage> {
                   Expanded(
                     child: TextField(
                       controller: _inputController,
+                      enabled: !isCurrentChatLoading,
                       maxLines: null,
                       keyboardType: TextInputType.multiline,
                       textInputAction: TextInputAction.newline,
@@ -170,7 +200,7 @@ class _AiChatPageState extends State<AiChatPage> {
                     decoration: BoxDecoration(
                       color: (isCurrentChatLoading || currentChatId == null)
                           ? Colors.grey
-                          : Colors.green,
+                          : AppTheme.green1,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: IconButton(
@@ -178,9 +208,14 @@ class _AiChatPageState extends State<AiChatPage> {
                         isCurrentChatLoading ? Icons.stop_circle : Icons.send,
                         color: Colors.white,
                       ),
-                      onPressed: (isCurrentChatLoading || currentChatId == null)
+                      // Adjusted onPressed logic
+                      onPressed: currentChatId == null
                           ? null
-                          : _sendMessage,
+                          : (isCurrentChatLoading
+                                ? () => messageProvider.cancelStreamForChat(
+                                    currentChatId,
+                                  )
+                                : _sendMessage),
                     ),
                   ),
                 ],
@@ -244,6 +279,7 @@ class _AiChatPageState extends State<AiChatPage> {
                       }
 
                       return ListView.builder(
+                        controller: _scrollController,
                         padding: const EdgeInsets.all(10),
                         itemCount:
                             provider.messages.length +
@@ -251,11 +287,23 @@ class _AiChatPageState extends State<AiChatPage> {
                         itemBuilder: (context, index) {
                           if (index < provider.messages.length) {
                             final msg = provider.messages[index];
-                            return buildMessageBubble(msg);
+
+                            final contentWidget = provider.buildMessageWidget(
+                              msg,
+                            );
+
+                            return buildMessageBubble(
+                              msg,
+                              contentWidget,
+                              key: ValueKey(msg.id),
+                            );
                           } else {
                             return Align(
                               alignment: Alignment.centerLeft,
                               child: Container(
+                                key: const ValueKey(
+                                  'streaming_loading_indicator',
+                                ),
                                 margin: const EdgeInsets.symmetric(
                                   vertical: 4.0,
                                 ),

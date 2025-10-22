@@ -1,6 +1,6 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
+import 'package:flutter_streaming_text_markdown/flutter_streaming_text_markdown.dart';
 import 'package:mobile/data/models/message.dart';
 import 'package:mobile/data/services/message_service.dart';
 import 'package:mobile/providers/image_provider.dart';
@@ -11,6 +11,9 @@ class MessageProvider extends ChangeNotifier {
   final Map<String, List<Message>> _chatMessages = {};
   final Map<String, StreamSubscription> _activeStreams = {};
   final Map<String, bool> _chatLoadingStates = {};
+  final Map<String, String> _streamingMessageIds = {};
+  final Map<String, StreamingTextController> _controllers = {};
+
   String? _activeChatId;
 
   MessageProvider(this._service);
@@ -28,7 +31,6 @@ class MessageProvider extends ChangeNotifier {
   void setActiveChat(String chatId) {
     _activeChatId = chatId;
     _chatMessages.putIfAbsent(chatId, () => []);
-
     notifyListeners();
   }
 
@@ -38,9 +40,7 @@ class MessageProvider extends ChangeNotifier {
     }
 
     final chatId = _activeChatId!;
-
     final userMessage = Message.userMessage(text, image: image, chatId: chatId);
-
     _chatMessages[chatId]!.add(userMessage);
     notifyListeners();
 
@@ -50,28 +50,29 @@ class MessageProvider extends ChangeNotifier {
     try {
       Message? aiMessage;
       final stream = _service.sendMessageStream(userMessage);
+
       final subscription = stream.listen(
         (partial) {
           if (aiMessage == null) {
-            aiMessage = partial;
+            aiMessage = Message.aiResponse('', chatId: chatId);
+            _controllers[aiMessage!.id] = StreamingTextController();
             _chatMessages[chatId]!.add(aiMessage!);
-          } else {
-            final lastIndex = _chatMessages[chatId]!.length - 1;
-            aiMessage = aiMessage!.copyWith(text: partial.text);
-            _chatMessages[chatId]![lastIndex] = aiMessage!;
+            _streamingMessageIds[chatId] = aiMessage!.id;
           }
+
+          final lastIndex = _chatMessages[chatId]!.length - 1;
+          aiMessage = aiMessage!.copyWith(text: partial.text);
+          _chatMessages[chatId]![lastIndex] = aiMessage!;
+
           notifyListeners();
         },
         onError: (error) {
-          print('Error in messsage stream for chat $chatId: $error');
-          _chatLoadingStates[chatId] = false;
-          _activeStreams.remove(chatId);
-          notifyListeners();
+          print('Error in message stream for chat $chatId: $error');
+          _cleanupStream(chatId);
         },
         onDone: () {
-          _chatLoadingStates[chatId] = false;
-          _activeStreams.remove(chatId);
-          notifyListeners();
+          _streamingMessageIds.remove(chatId);
+          _cleanupStream(chatId);
         },
         cancelOnError: true,
       );
@@ -79,38 +80,91 @@ class MessageProvider extends ChangeNotifier {
       _activeStreams[chatId] = subscription;
     } catch (e) {
       print("Failed to send message in chat $chatId: $e");
-      _chatLoadingStates[chatId] = false;
-      notifyListeners();
+      _cleanupStream(chatId);
     }
+  }
+
+  void _cleanupStream(String chatId) {
+    _chatLoadingStates[chatId] = false;
+    _activeStreams.remove(chatId);
+
+    final messageId = _streamingMessageIds[chatId];
+    if (messageId != null) {
+      _controllers[messageId]?.dispose();
+      _controllers.remove(messageId);
+      _streamingMessageIds.remove(chatId);
+    }
+
+    notifyListeners();
+  }
+
+  Widget buildMessageWidget(Message message) {
+    final isStreaming =
+        _activeChatId != null &&
+        _streamingMessageIds[_activeChatId] == message.id;
+
+    if (message.isUser) {
+      return SelectableText(
+        message.text,
+        style: const TextStyle(fontSize: 16, height: 1.5),
+      );
+    }
+
+    if (isStreaming) {
+      final controller = _controllers[message.id];
+
+      if (controller == null) {
+        return StreamingTextMarkdown.instant(
+          text: message.text,
+          markdownEnabled: true,
+          latexEnabled: true,
+        );
+      }
+
+      return StreamingTextMarkdown.claude(
+        text: message.text,
+        controller: controller,
+        markdownEnabled: true,
+        latexEnabled: true,
+        onComplete: () => debugPrint('Message ${message.id} streaming complete'),
+      );
+    }
+
+    return StreamingTextMarkdown.instant(
+      text: message.text,
+      markdownEnabled: true,
+      latexEnabled: true,
+    );
   }
 
   void cancelStreamForChat(String chatId) {
     _activeStreams[chatId]?.cancel();
-    _activeStreams.remove(chatId);
-    _chatLoadingStates[chatId] = false;
-    notifyListeners();
+    _streamingMessageIds.remove(chatId);
+    _cleanupStream(chatId);
   }
 
-  bool isChatLoading(String chatId) {
-    return _chatLoadingStates[chatId] ?? false;
-  }
+  bool isChatLoading(String chatId) => _chatLoadingStates[chatId] ?? false;
 
-  List<Message> getMessagesForChat(String chatId) {
-    return List.unmodifiable(_chatMessages[chatId] ?? []);
-  }
+  List<Message> getMessagesForChat(String chatId) =>
+      List.unmodifiable(_chatMessages[chatId] ?? []);
 
   void clearActiveChat() {
     _activeChatId = null;
+    _streamingMessageIds.clear();
+    _controllers.clear();
     notifyListeners();
   }
-
 
   @override
   void dispose() {
     for (final subscription in _activeStreams.values) {
       subscription.cancel();
     }
-    _activeStreams.clear();
+    for (final controller in _controllers.values) {
+      controller.dispose();
+    }
+    _streamingMessageIds.clear();
+    _controllers.clear();
     super.dispose();
   }
 
@@ -121,7 +175,9 @@ class MessageProvider extends ChangeNotifier {
     }
 
     final buffer = StringBuffer();
-    buffer.writeln("Please analyze this plant image for any diseases or issues.");
+    buffer.writeln(
+      "Please analyze this plant image for any diseases or issues.",
+    );
 
     final details = imageProvider.getFormattedPlantDetails();
     if (details.isNotEmpty) {

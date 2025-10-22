@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/providers/auth/auth_provider.dart';
 import 'package:mobile/theme.dart';
+import 'package:mobile/views/widgets/beautified_text_field_widget.dart';
 import 'package:mobile/views/widgets/custom_container_widget.dart';
 import 'package:mobile/views/widgets/onboarding_button_widget.dart';
-import 'package:mobile/views/widgets/password_text_field_widget.dart';
 import 'package:mobile/views/widgets/text_input_widget.dart';
 import 'package:provider/provider.dart';
 
@@ -134,7 +134,7 @@ class _IntroPage2State extends State<IntroPage2> {
                     "What will your password be?",
                     style: AppTheme.labelMedium.copyWith(color: AppTheme.white),
                   ),
-                  PasswordTextFieldWidget(
+                  BeautifiedTextFieldWidget(
                     controller: _passwordController,
                     hint: 'Enter your password',
                     prefixIcon: Icons.lock_outline,

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/data/models/message.dart';
 
-Widget buildMessageBubble(Message msg) {
+// Function updated to accept Widget content and Key
+Widget buildMessageBubble(Message msg, Widget content, {Key? key}) {
     final isUser = msg.isUser;
 
     return Align(
+      key: key, 
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 5),
@@ -27,7 +29,7 @@ Widget buildMessageBubble(Message msg) {
               ),
             ),
           if (msg.text.isNotEmpty)   
-            Text(msg.text),
+            content, 
           ],
         ),
       ),

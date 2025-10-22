@@ -29,6 +29,11 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> markOnboardingCompleted() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('seenOnboarding', true);
+  }
+
   Future<void> loadUser() async {
     final prefs = await SharedPreferences.getInstance();
     final jsonUser = prefs.getString('user');

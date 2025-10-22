@@ -8,12 +8,14 @@ class CustomTextFieldWidget extends StatefulWidget {
     super.key,
     required this.liveSearch,
     this.onSearch,
-    this.hinttext
+    this.hinttext,
+    this.maxLines,
   });
 
   final bool liveSearch;
   final ValueChanged<String>? onSearch;
   final String? hinttext;
+  final int? maxLines;
 
   @override
   State<CustomTextFieldWidget> createState() => _CustomTextFieldWidgetState();

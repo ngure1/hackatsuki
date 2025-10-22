@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/providers/auth/auth_provider.dart';
 import 'package:mobile/theme.dart';
+import 'package:mobile/views/pages/login_page.dart';
 import 'package:mobile/views/widgets/custom_container_widget.dart';
 import 'package:mobile/views/widgets/onboarding_button_widget.dart';
 import 'package:mobile/views/widgets/text_input_widget.dart';
@@ -78,7 +79,7 @@ class _IntroPage1State extends State<IntroPage1> {
               ],
             ),
             SizedBox(height: 32.0),
-        
+
             OnboardingButtonWidget(
               onTap: () async {
                 try {
@@ -93,29 +94,31 @@ class _IntroPage1State extends State<IntroPage1> {
               borderColor: AppTheme.white,
               buttonTextColor: AppTheme.black,
             ),
-        
+
             SizedBox(height: 32.0),
             OnboardingButtonWidget(
               onTap: () {
                 final phone = _phoneController.text.trim();
                 final phoneRegEx = RegExp(r'^\+?\d{9,15}$');
-        
+
                 if (phone.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Please enter your phone number')),
                   );
                   return;
                 }
-        
+
                 if (!phoneRegEx.hasMatch(phone)) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Please enter a valid phone number')),
+                    SnackBar(
+                      content: Text('Please enter a valid phone number'),
+                    ),
                   );
                   return;
                 }
-        
+
                 context.read<AuthProvider>().savePhoneNumber(phone);
-        
+
                 widget.pageController.nextPage(
                   duration: Duration(milliseconds: 300),
                   curve: Curves.easeInOut,
@@ -136,7 +139,15 @@ class _IntroPage1State extends State<IntroPage1> {
                 ),
                 SizedBox(width: 8.0),
                 GestureDetector(
-                  onTap: () {},
+                  onTap: () async {
+                    await context.read<AuthProvider>().markOnboardingCompleted();
+
+                    if (mounted) {
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(builder: (_) => LoginPage()),
+                      );
+                    }
+                  },
                   child: Text(
                     'sign in',
                     style: AppTheme.labelLarge.copyWith(

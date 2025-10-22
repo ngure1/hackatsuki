@@ -26,7 +26,7 @@ class MessageService {
 
     if (streamedResponse.statusCode != 200) {
       throw Exception(
-        'Failed to send message; ${streamedResponse.statusCode})',
+        'Failed to send message; ${streamedResponse.headers})',
       );
     }
 
@@ -34,10 +34,8 @@ class MessageService {
 
     String buffer = '';
     await for (final chunk in stream) {
-      for (final char in chunk.split('')) {
-        buffer += char;
+        buffer += chunk;
         yield Message.aiResponse(buffer);
-      }
     }
   }
 }

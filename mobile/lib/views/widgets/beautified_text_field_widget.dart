@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'package:mobile/theme.dart';
 
-class PasswordTextFieldWidget extends StatelessWidget {
-  const PasswordTextFieldWidget({
+class BeautifiedTextFieldWidget extends StatelessWidget {
+  const BeautifiedTextFieldWidget({
     super.key,
 
     required this.controller,
