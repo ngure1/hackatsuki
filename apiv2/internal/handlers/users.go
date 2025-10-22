@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"apiv2/requests"
+	"apiv2/responses"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -46,4 +47,38 @@ func (h *Handler) UpdatePhoneAndLocation(c *fiber.Ctx) error {
 	}
 
 	return c.SendStatus(fiber.StatusOK)
+}
+
+// GetMe godoc
+// @Summary Get current user profile
+// @Description Get the authenticated user's profile information
+// @Tags Users
+// @Produce json
+// @Success 200 {object} responses.UserProfileResponse
+// @Failure 401 {object} map[string]string "Unauthenticated"
+// @Failure 404 {object} map[string]string "User not found"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /users/me [get]
+func (h *Handler) GetMe(c *fiber.Ctx) error {
+	userId := c.Locals("userId").(uint)
+
+	user, err := h.userStore.GetUserById(userId)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
+			"message": "Error retrieving user profile",
+			"error":   err.Error(),
+		})
+	}
+
+	profileResponse := responses.UserProfileResponse{
+		ID:          user.ID,
+		FirstName:   user.FirstName,
+		LastName:    user.LastName,
+		Email:       user.Email,
+		PhoneNumber: user.PhoneNumber,
+		City:        user.City,
+		CreatedAt:   user.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+	}
+
+	return c.Status(fiber.StatusOK).JSON(profileResponse)
 }
