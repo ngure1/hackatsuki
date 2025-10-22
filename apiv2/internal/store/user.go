@@ -12,13 +12,15 @@ type UserStore struct {
 	db *gorm.DB
 }
 
-// UpdatePhoneNumber implements user.Store.
-func (us *UserStore) UpdatePhoneNumber(userId uint, phoneNumber string) error {
+// UpdatePhoneAndLocation implements user.Store.
+func (us *UserStore) UpdatePhoneAndLocation(userId uint, phoneNumber string, city *string) error {
 	user, err := us.GetUserById(userId)
 	if err != nil {
 		return err
 	}
+
 	user.PhoneNumber = &phoneNumber
+	user.City = city
 
 	return us.db.Save(&user).Error
 }

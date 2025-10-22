@@ -5,9 +5,11 @@ type DiagnosisRequest struct {
 	Prompt string `json:"promtp"`
 }
 
-type UpdatePhoneNumberRequest struct {
-	PhoneNumber string `json:"phone_number"`
+type UpdatePhoneAndLocationRequest struct {
+	PhoneNumber string  `json:"phone_number"`
+	City        *string `json:"city"`
 }
+
 type SigninRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
