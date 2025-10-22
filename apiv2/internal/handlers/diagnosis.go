@@ -62,14 +62,11 @@ func (h *Handler) GetDiagnosis(c *fiber.Ctx) error {
 	for _, message := range messages {
 		previousMessages += fmt.Sprintf("{role: %s,content: %s}", message.SenderType, message.Content)
 	}
-	imageRequired := len(messages) == 0
+
+	// Handle optional image upload
 	file, err := c.FormFile("image")
-	if err != nil && imageRequired {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": "image file is required",
-			"error":   err.Error(),
-		})
-	}
+	// Image is now fully optional - no error handling for missing image
+
 	var userContent string
 	if file != nil {
 		c.SaveFile(file, fmt.Sprintf("%s%s", FilePath, file.Filename))
@@ -79,6 +76,14 @@ func (h *Handler) GetDiagnosis(c *fiber.Ctx) error {
 	prompt := c.FormValue("prompt", "")
 	if prompt != "" {
 		userContent += fmt.Sprintf("Prompt: %s", prompt)
+	}
+
+	// Ensure we have some content to process (either image, prompt, or both)
+	if file == nil && prompt == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Either an image or a prompt (or both) must be provided",
+			"error":   "No content provided for diagnosis",
+		})
 	}
 
 	userMessage := &models.Message{
