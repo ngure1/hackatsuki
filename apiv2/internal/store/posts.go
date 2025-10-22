@@ -29,7 +29,7 @@ func (ps *PostStore) DeletePost(postId uint, userId uint) error {
 }
 
 // GetCommentReplies implements posts.Store.
-func (ps *PostStore) GetCommentReplies(commentId uint, page int, limit int) ([]models.Comment, int, error) {
+func (ps *PostStore) GetCommentReplies(commentId uint, page int, limit int) ([]responses.CommentsReponse, int, error) {
 	var comments []models.Comment
 	var totalCount int64
 	err := ps.db.Model(&models.Comment{}).Where("parent_comment_id = ?", commentId).Count(&totalCount).Error
@@ -38,7 +38,7 @@ func (ps *PostStore) GetCommentReplies(commentId uint, page int, limit int) ([]m
 	}
 
 	offset := utils.GetOffset(page, limit)
-	err = ps.db.Limit(limit).Offset(offset).Where("parent_comment_id = ?", commentId).Find(&comments).Error
+	err = ps.db.Preload("User").Limit(limit).Offset(offset).Where("parent_comment_id = ?", commentId).Find(&comments).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, 0, err
 	}
@@ -46,7 +46,51 @@ func (ps *PostStore) GetCommentReplies(commentId uint, page int, limit int) ([]m
 		return nil, 0, fmt.Errorf("an unexpected error occured when querying comment replies: %s", err.Error())
 	}
 
-	return comments, int(totalCount), nil
+	ids := make([]uint, len(comments))
+	for i, c := range comments {
+		ids[i] = c.ID
+	}
+
+	// fetch reply counts in one query
+	type CountResult struct {
+		ParentCommentId uint
+		Count           int64
+	}
+	var counts []CountResult
+
+	if len(ids) > 0 {
+		ps.db.Model(&models.Comment{}).
+			Select("parent_comment_id, COUNT(*) as count").
+			Where("parent_comment_id IN ?", ids).
+			Group("parent_comment_id").
+			Scan(&counts)
+	}
+
+	// map reply counts
+	replyMap := make(map[uint]int64)
+	for _, c := range counts {
+		replyMap[c.ParentCommentId] = c.Count
+	}
+
+	// build response DTO
+	var response []responses.CommentsReponse
+	for _, c := range comments {
+		response = append(response, responses.CommentsReponse{
+			ID:              c.ID,
+			Content:         c.Content,
+			ParentCommentId: c.ParentCommentId,
+			PostId:          c.PostId,
+			User: responses.UserResponse{
+				ID:        c.User.ID,
+				FirstName: c.User.FirstName,
+				LastName:  c.User.LastName,
+			},
+			CreatedAt:    c.CreatedAt,
+			RepliesCount: replyMap[c.ID],
+		})
+	}
+
+	return response, int(totalCount), nil
 }
 
 // GetComments implements posts.Store.
@@ -62,7 +106,7 @@ func (ps *PostStore) GetComments(postId uint, page int, limit int) ([]responses.
 		return nil, 0, fmt.Errorf("an unexpected error occured when counting comments: %s", err.Error())
 	}
 	offset := utils.GetOffset(page, limit)
-	err = ps.db.Limit(limit).
+	err = ps.db.Preload("User").Limit(limit).
 		Offset(offset).
 		Where("post_id = ? AND parent_comment_id IS NULL", postId).
 		Find(&comments).
@@ -107,9 +151,13 @@ func (ps *PostStore) GetComments(postId uint, page int, limit int) ([]responses.
 			Content:         c.Content,
 			ParentCommentId: c.ParentCommentId,
 			PostId:          c.PostId,
-			UserID:          c.UserID,
-			CreatedAt:       c.CreatedAt,
-			RepliesCount:    replyMap[c.ID],
+			User: responses.UserResponse{
+				ID:        c.User.ID,
+				FirstName: c.User.FirstName,
+				LastName:  c.User.LastName,
+			},
+			CreatedAt:    c.CreatedAt,
+			RepliesCount: replyMap[c.ID],
 		})
 	}
 
@@ -122,7 +170,7 @@ func (ps *PostStore) CreateComment(
 	postId uint,
 	userId uint,
 	parentCommentId *uint,
-) (*models.Comment, error) {
+) (*responses.CommentsReponse, error) {
 	comment := &models.Comment{
 		Content:         content,
 		PostId:          postId,
@@ -134,7 +182,27 @@ func (ps *PostStore) CreateComment(
 		return nil, err
 	}
 
-	return comment, nil
+	// Preload the user for the response
+	err = ps.db.Preload("User").First(comment).Error
+	if err != nil {
+		return nil, err
+	}
+
+	response := &responses.CommentsReponse{
+		ID:              comment.ID,
+		Content:         comment.Content,
+		ParentCommentId: comment.ParentCommentId,
+		PostId:          comment.PostId,
+		User: responses.UserResponse{
+			ID:        comment.User.ID,
+			FirstName: comment.User.FirstName,
+			LastName:  comment.User.LastName,
+		},
+		CreatedAt:    comment.CreatedAt,
+		RepliesCount: 0, // New comment has no replies
+	}
+
+	return response, nil
 }
 
 // ToggleLikePost implements posts.Store.

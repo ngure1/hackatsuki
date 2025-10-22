@@ -7,13 +7,13 @@ type SigninResponse struct {
 }
 
 type CommentsReponse struct {
-	ID              uint      `json:"id"`
-	Content         string    `json:"content"`
-	ParentCommentId *uint     `json:"parent_comment_id"`
-	PostId          uint      `json:"post_id"`
-	UserID          uint      `json:"user_id"`
-	CreatedAt       time.Time `json:"created_at"`
-	RepliesCount    int64     `json:"replies_count"`
+	ID              uint         `json:"id"`
+	Content         string       `json:"content"`
+	ParentCommentId *uint        `json:"parent_comment_id"`
+	PostId          uint         `json:"post_id"`
+	User            UserResponse `json:"user"`
+	CreatedAt       time.Time    `json:"created_at"`
+	RepliesCount    int64        `json:"replies_count"`
 }
 
 type UserResponse struct {
@@ -60,13 +60,13 @@ type ChatMessagesResponse struct {
 
 // Blog responses
 type BlogCommentsResponse struct {
-	ID              uint      `json:"id"`
-	Content         string    `json:"content"`
-	ParentCommentId *uint     `json:"parent_comment_id"`
-	BlogId          uint      `json:"blog_id"`
-	UserID          uint      `json:"user_id"`
-	CreatedAt       time.Time `json:"created_at"`
-	RepliesCount    int64     `json:"replies_count"`
+	ID              uint         `json:"id"`
+	Content         string       `json:"content"`
+	ParentCommentId *uint        `json:"parent_comment_id"`
+	BlogId          uint         `json:"blog_id"`
+	User            UserResponse `json:"user"`
+	CreatedAt       time.Time    `json:"created_at"`
+	RepliesCount    int64        `json:"replies_count"`
 }
 
 type BlogResponse struct {

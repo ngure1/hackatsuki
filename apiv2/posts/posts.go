@@ -20,7 +20,7 @@ type Store interface {
 		chatUrl *string,
 	) (*models.Post, error)
 	ToggleLikePost(postId uint, userId uint) (bool, error) // returns true if liked, false if unliked
-	CreateComment(content string, postId uint, userId uint, parentCommentId *uint) (*models.Comment, error)
+	CreateComment(content string, postId uint, userId uint, parentCommentId *uint) (*responses.CommentsReponse, error)
 	GetComments(postId uint, page int, limit int) ([]responses.CommentsReponse, int, error)
-	GetCommentReplies(commentId uint, page int, limit int) ([]models.Comment, int, error)
+	GetCommentReplies(commentId uint, page int, limit int) ([]responses.CommentsReponse, int, error)
 }

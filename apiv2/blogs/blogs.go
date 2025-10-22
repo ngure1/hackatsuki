@@ -17,7 +17,7 @@ type Store interface {
 		userId uint,
 	) (*models.Blog, error)
 	ToggleLikeBlog(blogId uint, userId uint) (bool, error) // returns true if liked, false if unliked
-	CreateBlogComment(content string, blogId uint, userId uint, parentCommentId *uint) (*models.BlogComment, error)
+	CreateBlogComment(content string, blogId uint, userId uint, parentCommentId *uint) (*responses.BlogCommentsResponse, error)
 	GetBlogComments(blogId uint, page int, limit int) ([]responses.BlogCommentsResponse, int, error)
-	GetBlogCommentReplies(commentId uint, page int, limit int) ([]models.BlogComment, int, error)
+	GetBlogCommentReplies(commentId uint, page int, limit int) ([]responses.BlogCommentsResponse, int, error)
 }
