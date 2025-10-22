@@ -12,6 +12,17 @@ type UserStore struct {
 	db *gorm.DB
 }
 
+// UpdatePhoneNumber implements user.Store.
+func (us *UserStore) UpdatePhoneNumber(userId uint, phoneNumber string) error {
+	user, err := us.GetUserById(userId)
+	if err != nil {
+		return err
+	}
+	user.PhoneNumber = &phoneNumber
+
+	return us.db.Save(&user).Error
+}
+
 // GetUserById implements user.Store.
 func (us UserStore) GetUserById(userId uint) (*models.User, error) {
 	var user models.User

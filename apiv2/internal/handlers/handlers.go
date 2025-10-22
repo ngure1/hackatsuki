@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"apiv2/blogs"
 	"apiv2/chat"
 	"apiv2/messages"
 	"apiv2/posts"
@@ -19,13 +20,15 @@ type Handler struct {
 	messagesStore messages.Store
 	userStore     user.Store
 	postsStore    posts.Store
+	blogsStore    blogs.Store
 }
 
-func New(cs chat.Store, ms messages.Store, us user.Store, ps posts.Store) *Handler {
+func New(cs chat.Store, ms messages.Store, us user.Store, ps posts.Store, bs blogs.Store) *Handler {
 	return &Handler{
 		chatStore:     cs,
 		messagesStore: ms,
 		userStore:     us,
 		postsStore:    ps,
+		blogsStore:    bs,
 	}
 }

@@ -5,6 +5,9 @@ type DiagnosisRequest struct {
 	Prompt string `json:"promtp"`
 }
 
+type UpdatePhoneNumberRequest struct {
+	PhoneNumber string `json:"phone_number"`
+}
 type SigninRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
@@ -25,6 +28,17 @@ type SignUpRequest struct {
 }
 
 type CreateCommentRequest struct {
+	Content         string `json:"content"`
+	ParentCommentId *uint  `json:"parent_comment_id"`
+}
+
+// Blog requests
+type CreateBlogRequest struct {
+	Title   string `json:"title"`
+	Content string `json:"content"`
+}
+
+type CreateBlogCommentRequest struct {
 	Content         string `json:"content"`
 	ParentCommentId *uint  `json:"parent_comment_id"`
 }

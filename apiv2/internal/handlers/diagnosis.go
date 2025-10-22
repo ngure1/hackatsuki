@@ -27,7 +27,7 @@ func (h *Handler) GetDiagnosis(c *fiber.Ctx) error {
 		})
 	}
 
-	err = h.chatStore.GetChatById(uint(chatId))
+	_, err = h.chatStore.GetChatById(uint(chatId))
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
 			"message": "error retrieving chat by id",

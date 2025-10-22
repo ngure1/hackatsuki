@@ -26,7 +26,8 @@ func (s *FiberServer) RegisterFiberRoutes() {
 	ms := store.NewMessageStore(db)
 	us := store.NewUserStore(db)
 	ps := store.NewPostStore(db)
-	h := handlers.New(cs, ms, us, ps)
+	bs := store.NewBlogStore(db)
+	h := handlers.New(cs, ms, us, ps, bs)
 
 	// Swagger route
 	s.Get("/swagger/*", fiberSwagger.WrapHandler)
@@ -37,24 +38,44 @@ func (s *FiberServer) RegisterFiberRoutes() {
 	s.Get("/oauth/google", h.GoogleAuthHandler)
 	s.Get("/oauth/redirect", h.GoogleAuthRedirectHandler)
 
+	s.Patch("/users", h.AuthMiddleware(), h.UpdatePhoneNumber)
+
 	//chat routes
 	chatRoutes := s.Group("/chats")
 	chatRoutes.Post("/", h.OptionalAuthMiddleware(), h.CreateChat)
 	chatRoutes.Post("/:chatId/diagnosis", h.GetDiagnosis)
+	chatRoutes.Post("/:chatId/share", h.AuthMiddleware(), h.ShareChatToCommunity)
 	// protected
 	chatRoutes.Get("/", h.AuthMiddleware(), h.GetChats)
+	chatRoutes.Get("/:chatId/messages", h.AuthMiddleware(), h.GetChatMessages)
 
-	// comunity post routes
+	// community post routes
 	postRoutes := s.Group("/posts")
-	postRoutes.Get("/", h.GetPosts)
-	postRoutes.Get("/:postId", h.GetPost)
+	postRoutes.Get("/", h.OptionalAuthMiddleware(), h.GetPosts) // Use optional auth to get isLiked
+	postRoutes.Get("/:postId", h.OptionalAuthMiddleware(), h.GetPost) // Use optional auth to get isLiked
 	//protected
 	postRoutes.Post("/", h.AuthMiddleware(), h.CreatePost)
+	postRoutes.Delete("/:postId", h.AuthMiddleware(), h.DeletePost)
 	postRoutes.Post("/:postId/likes", h.AuthMiddleware(), h.LikePost)
 	postRoutes.Post("/:postId/comments", h.AuthMiddleware(), h.CommentOnPost)
 	postRoutes.Get("/:postId/comments", h.AuthMiddleware(), h.GetComments)
 
-	// comment  routes
+	// blog routes
+	blogRoutes := s.Group("/blogs")
+	blogRoutes.Get("/", h.OptionalAuthMiddleware(), h.GetBlogs) // Use optional auth to get isLiked
+	blogRoutes.Get("/:blogId", h.OptionalAuthMiddleware(), h.GetBlog) // Use optional auth to get isLiked
+	//protected
+	blogRoutes.Post("/", h.AuthMiddleware(), h.CreateBlog)
+	blogRoutes.Delete("/:blogId", h.AuthMiddleware(), h.DeleteBlog)
+	blogRoutes.Post("/:blogId/likes", h.AuthMiddleware(), h.LikeBlog)
+	blogRoutes.Post("/:blogId/comments", h.AuthMiddleware(), h.CommentOnBlog)
+	blogRoutes.Get("/:blogId/comments", h.AuthMiddleware(), h.GetBlogComments)
+
+	// comment routes
 	commentRoutes := s.Group("/comments", h.AuthMiddleware())
 	commentRoutes.Get("/:commentId/replies", h.GetCommentReplies)
+
+	// blog comment routes
+	blogCommentRoutes := s.Group("/blog-comments", h.AuthMiddleware())
+	blogCommentRoutes.Get("/:commentId/replies", h.GetBlogCommentReplies)
 }
