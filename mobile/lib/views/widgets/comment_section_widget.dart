@@ -69,8 +69,8 @@ class _CommentsSectionWidgetState extends State<CommentsSectionWidget> {
   Widget _buildCommentInput() {
     return CustomContainerWidget(
       color: AppTheme.white,
-      horizontalPadding: 12,
-      verticalPadding: 12,
+      horizontalPadding: 4,
+      verticalPadding: 4,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -145,9 +145,9 @@ class _CommentsSectionWidgetState extends State<CommentsSectionWidget> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         CustomContainerWidget(
-          color: isTopLevel ? AppTheme.white : AppTheme.green5,
+          color: isTopLevel ? AppTheme.white : AppTheme.lightGreen1,
           horizontalPadding: 12,
-          verticalPadding: 8,
+          verticalPadding: 4,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

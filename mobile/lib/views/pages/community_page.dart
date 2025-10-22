@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/data/models/post.dart';
 import 'package:mobile/providers/comment_provider.dart';
 import 'package:mobile/providers/post_filter_provider.dart';
 import 'package:mobile/providers/post_provider.dart';
@@ -34,10 +35,11 @@ class _CommunityPageState extends State<CommunityPage> {
     );
   }
 
-  void _handleLikePost(String postId) {
+  void _handleToggleLike(Post post) {
     final postProvider = context.read<PostProvider>();
-    postProvider.likePost(postId);
-    print('liked');
+    postProvider.toggleLikePost(post);
+
+    print('Toggled like status for post: ${post.id}');
   }
 
   void _toggleComments(String postId) {
@@ -91,9 +93,48 @@ class _CommunityPageState extends State<CommunityPage> {
     await commentProvider.loadCommentReplies(postId, commentId);
   }
 
+  void _handleDeletePost(String postId) async {
+    final postProvider = context.read<PostProvider>();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) {
+        return AlertDialog(
+          title: Text('Delete Post'),
+          content: Text(
+            'Are you sure you want to delete this post? this action cannot be undone.',
+          ),
+          actions: [
+            IconButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              icon: Icon(Icons.cancel),
+            ),
+            IconButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              icon: Icon(Icons.delete, color: Colors.redAccent),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmed!) {
+      final success = await postProvider.deletePost(postId);
+      if (success && mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Post deleted successfully')));
+      } else if(mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to delete post: ${postProvider.error} ?? An error occurred')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final postFilter = context.watch<PostFilterProvider>();
+
 
     return Scaffold(
       backgroundColor: AppTheme.green4,
@@ -265,10 +306,12 @@ class _CommunityPageState extends State<CommunityPage> {
                       return Padding(
                         padding: EdgeInsets.only(bottom: 16),
                         child: PostCardWidget.fromPost(
+                          //TODO: implement deletion, specifically fetching the currently logged in user id
                           post: post,
                           comments: postComments,
-                          onLike: () => _handleLikePost(post.id.toString()),
+                          onLike: () => _handleToggleLike(post),
                           onComment: () => _toggleComments(post.id.toString()),
+                          onDelete: () => _handleDeletePost(post.id.toString()),
                           onAddComment: (content, parentCommentId) =>
                               _handleAddComment(
                                 post.id.toString(),

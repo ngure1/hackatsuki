@@ -28,10 +28,35 @@ class MessageProvider extends ChangeNotifier {
 
   String? get activeChatId => _activeChatId;
 
-  void setActiveChat(String chatId) {
+  Future<void> setActiveChat(String chatId) async {
     _activeChatId = chatId;
     _chatMessages.putIfAbsent(chatId, () => []);
-    notifyListeners();
+
+    if (_chatMessages[chatId]!.isEmpty && _activeStreams[chatId] == null) {
+        
+        // Set loading state to true for this specific chat
+        _chatLoadingStates[chatId] = true;
+        notifyListeners(); // Notify to show the loading indicator
+
+        try {
+            // 2. Call the MessageService to fetch historical messages
+            final messages = await _service.fetchMessageForChat(chatId);
+            
+            // 3. Update the chat cache with the fetched messages
+            _chatMessages[chatId] = messages; 
+
+        } catch (e) {
+            print("Failed to load messages for chat $chatId: $e");
+            // Handle the error (e.g., leave list empty, show error message)
+        } finally {
+            // 4. Set loading state to false
+            _chatLoadingStates[chatId] = false;
+            notifyListeners(); // Notify to refresh the chat list and page with history
+        }
+    } else {
+        // Chat is already loaded or active, just notify to refresh UI
+        notifyListeners();
+    }
   }
 
   Future<void> sendUserMessage(String text, {dynamic image}) async {
@@ -104,9 +129,35 @@ class MessageProvider extends ChangeNotifier {
         _streamingMessageIds[_activeChatId] == message.id;
 
     if (message.isUser) {
-      return SelectableText(
-        message.text,
-        style: const TextStyle(fontSize: 16, height: 1.5),
+      final List<Widget> children = [];
+
+      if (message.imageUrl != null) {
+        children.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(
+                message.imageUrl!,
+                width: 150,
+                height: 150,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+        );
+      }
+
+      children.add(
+        SelectableText(
+          message.text,
+          style: const TextStyle(fontSize: 16, height: 1.5),
+        ),
+      );
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: children,
       );
     }
 
@@ -126,7 +177,8 @@ class MessageProvider extends ChangeNotifier {
         controller: controller,
         markdownEnabled: true,
         latexEnabled: true,
-        onComplete: () => debugPrint('Message ${message.id} streaming complete'),
+        onComplete: () =>
+            debugPrint('Message ${message.id} streaming complete'),
       );
     }
 

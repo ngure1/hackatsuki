@@ -19,13 +19,17 @@ class PostService {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+        final int totalPages = data['total_pages'] ?? 1;
+
+        final int? nextPage = page < totalPages ? page+1 : null;
+        final int? previousPage = page > 1 ? page -1 : null;
         return {
           'success': true,
           'posts': (data['posts'] as List)
               .map((post) => Post.fromJson(post))
               .toList(),
-          'nextPage': data['next'] != null ? page + 1 : null,
-          'previousPage': data['previous'] != null ? page - 1 : null,
+          'nextPage': nextPage,
+          'previousPage': previousPage,
         };
       } else {
         return {
@@ -84,7 +88,6 @@ class PostService {
     final streamedResponse = await request.send();
     final response = await http.Response.fromStream(streamedResponse);
 
-
     if (response.statusCode == 201 || response.statusCode == 200) {
       final data = jsonDecode(response.body);
       return Post.fromJson(data);
@@ -95,48 +98,23 @@ class PostService {
     }
   }
 
-  Future<Map<String, dynamic>> likePostById(String postId) async {
+  Future<Map<String, dynamic>> togglePostLikeById(String postId) async {
     try {
       final response = await _authService.post(
-        ApiEndpoints.likePost(postId),
+        ApiEndpoints.toggleLike(postId),
         {},
       );
 
       if (response.statusCode == 200) {
-
         return {'success': true};
       } else {
         return {
           'success': false,
-          'error': 'Failed to like post: ${response.statusCode}',
+          'error': 'Failed to toggle like: ${response.statusCode}',
         };
       }
     } catch (e) {
-      return {'success': false, 'error': 'Failed to like post: $e'};
-    }
-  }
-
-  Future<Map<String, dynamic>> unlikePostById(String postId) async {
-    try {
-      if (_authService.accessToken == null) {
-        throw Exception('Not authenticated');
-      }
-
-      final response = await http.delete(
-        Uri.parse(ApiEndpoints.likePost(postId)),
-        headers: {"Authorization": "Bearer ${_authService.accessToken}"},
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 204) {
-        return {'success': true};
-      } else {
-        return {
-          'success': false,
-          'error': 'Failed to unlike post: ${response.statusCode}',
-        };
-      }
-    } catch (e) {
-      return {'success': false, 'error': 'Failed to unlike post: $e'};
+      return {'success': false, 'error': 'Failed to toggle like: $e'};
     }
   }
 
@@ -230,6 +208,29 @@ class PostService {
       }
     } catch (e) {
       return {'success': false, 'error': 'Failed to load replies: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> deletePost(String postId) async {
+    try {
+      // Assuming _authService.post handles the POST request with the Authorization header.
+      // This is used even for deletion as per your requirement.
+      final response = await _authService.post(
+        ApiEndpoints.deletePost(postId),
+        {}, // Empty body for the POST request
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        return {'success': true};
+      } else {
+        return {
+          'success': false,
+          'error':
+              'Failed to delete post: ${response.statusCode} ${response.body}',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'error': 'Failed to delete post: $e'};
     }
   }
 }

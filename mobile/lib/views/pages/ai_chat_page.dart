@@ -51,7 +51,7 @@ class _AiChatPageState extends State<AiChatPage> {
 
       final activeChat = chatProvider.activeChat;
       if (activeChat != null && activeChat.id != null) {
-        messageProvider.setActiveChat(activeChat.id!);
+        await messageProvider.setActiveChat(activeChat.id!);
 
         final prefilledText = messageProvider.getPrefilledMessage(
           imageProvider,

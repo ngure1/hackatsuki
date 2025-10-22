@@ -11,9 +11,11 @@ class PostCardWidget extends StatelessWidget {
   final VoidCallback? onSeeMoreComments;
   final VoidCallback? onLike;
   final VoidCallback? onComment;
-  final Function(String, int?) onAddComment; 
+  final Function(String, int?) onAddComment;
   final Function(int) onLoadReplies;
   final bool showComments;
+  final VoidCallback? onDelete;
+  final int? currentUserId;
 
   const PostCardWidget({
     super.key,
@@ -24,7 +26,9 @@ class PostCardWidget extends StatelessWidget {
     this.onComment,
     required this.onAddComment,
     required this.onLoadReplies,
+    required this.onDelete,
     this.showComments = false,
+    this.currentUserId,
   });
 
   factory PostCardWidget.fromPost({
@@ -36,6 +40,8 @@ class PostCardWidget extends StatelessWidget {
     required Function(String, int?) onAddComment,
     required Function(int) onLoadReplies,
     bool showComments = false,
+    VoidCallback? onDelete,
+    int? currentuserId,
   }) {
     return PostCardWidget(
       post: post,
@@ -46,6 +52,7 @@ class PostCardWidget extends StatelessWidget {
       onAddComment: onAddComment,
       onLoadReplies: onLoadReplies,
       showComments: showComments,
+      onDelete: onDelete,
     );
   }
 
@@ -94,19 +101,20 @@ class PostCardWidget extends StatelessWidget {
                     style: AppTheme.labelSmall.copyWith(color: AppTheme.white),
                   ),
                 ),
+                if (currentUserId != null && currentUserId == post.user?.id)
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline, color: Colors.red),
+                      onPressed: onDelete,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
             ],
           ),
           SizedBox(height: 8.0),
           Text(
             post.question,
-            style: AppTheme.bodyMedium.copyWith(color: AppTheme.black),
+            style: AppTheme.labelLarge.copyWith(color: AppTheme.black),
           ),
-          SizedBox(height: 8.0),
-          if (post.description.isNotEmpty)
-            Text(
-              post.description,
-              style: AppTheme.bodySmall.copyWith(color: AppTheme.gray3),
-            ),
           SizedBox(height: 8.0),
           if (post.imageUrl != null && post.imageUrl!.isNotEmpty)
             ClipRRect(
@@ -130,12 +138,22 @@ class PostCardWidget extends StatelessWidget {
                     height: 150,
                     width: double.infinity,
                     color: AppTheme.gray1,
-                    child: Center(child: CircularProgressIndicator(color: AppTheme.green3)),
+                    child: Center(
+                      child: CircularProgressIndicator(color: AppTheme.green3),
+                    ),
                   );
                 },
               ),
             ),
+            SizedBox(height: 8.0),
+          if (post.description.isNotEmpty)
+            Text(
+              post.description,
+              style: AppTheme.bodySmall.copyWith(color: AppTheme.gray3),
+            ),
           SizedBox(height: 8.0),
+          
+          
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
@@ -165,18 +183,22 @@ class PostCardWidget extends StatelessWidget {
   }
 
   Widget _buildLikeButton() {
+    final bool isLiked = post.isLikedByCurrentUser == true;
+
     return GestureDetector(
       onTap: onLike,
       child: Row(
         children: [
           Icon(
-            Icons.favorite_border, 
-            color: AppTheme.gray2,
+            isLiked ? Icons.favorite : Icons.favorite_border,
+            color: isLiked ? Colors.red : AppTheme.gray2,
           ),
           SizedBox(width: 4.0),
           Text(
             '${post.likesCount ?? 0}',
-            style: AppTheme.labelSmall.copyWith(color: AppTheme.gray2),
+            style: AppTheme.labelSmall.copyWith(
+              color: isLiked ? Colors.red : AppTheme.gray2,
+            ),
           ),
         ],
       ),

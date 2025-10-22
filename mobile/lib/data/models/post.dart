@@ -1,5 +1,3 @@
-import 'package:mobile/data/utils.dart';
-
 class Post {
   final int? id;
   final String question;
@@ -43,7 +41,7 @@ class Post {
       commentsCount: json['comments_count'],
       likesCount: json['likes_count'],
       user: json['user'] != null ? User.fromJson(json['user']) : null,
-      isLikedByCurrentUser: json['']
+      isLikedByCurrentUser: json['is_liked'] as bool?
     );
   }
 }

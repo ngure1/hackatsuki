@@ -109,12 +109,18 @@ class PostProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> likePost(String postId) async {
+  Future<bool> deletePost(String postId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
     try {
-      final result = await _postService.likePostById(postId);
+      final result = await _postService.deletePost(postId);
+      _isLoading = false;
 
       if (result['success'] == true) {
-        _updatePostLikes(postId, 1);
+        _posts.removeWhere((post) => post.id.toString() == postId);
+        notifyListeners();
         return true;
       } else {
         _error = result['error'];
@@ -122,18 +128,23 @@ class PostProvider with ChangeNotifier {
         return false;
       }
     } catch (e) {
-      _error = 'Failed to like post: $e';
+      _isLoading = false;
+      _error = 'Failed to delete post: $e';
       notifyListeners();
       return false;
     }
   }
 
-  Future<bool> unlikePost(String postId) async {
+  Future<bool> toggleLikePost(Post post) async {
+    final postId = post.id.toString();
+    final bool currentlyLiked = post.isLikedByCurrentUser == true;
+    final int change = currentlyLiked ? -1 : 1; 
+
     try {
-      final result = await _postService.unlikePostById(postId);
+      final result = await _postService.togglePostLikeById(postId); 
 
       if (result['success'] == true) {
-        _updatePostLikes(postId, -1);
+        _updatePostLikes(postId, change, newIsLiked: !currentlyLiked);
         return true;
       } else {
         _error = result['error'];
@@ -141,17 +152,20 @@ class PostProvider with ChangeNotifier {
         return false;
       }
     } catch (e) {
-      _error = 'Failed to unlike post: $e';
+      _error = 'Failed to toggle like: $e';
       notifyListeners();
       return false;
     }
   }
 
+  
 
-  void _updatePostLikes(String postId, int change) {
+
+  void _updatePostLikes(String postId, int change, {required bool newIsLiked}) {
     final index = _posts.indexWhere((post) => post.id.toString() == postId);
     if (index != -1) {
       final post = _posts[index];
+      
       _posts[index] = Post(
         id: post.id,
         question: post.question,
@@ -161,6 +175,8 @@ class PostProvider with ChangeNotifier {
         commentsCount: post.commentsCount,
         likesCount: (post.likesCount ?? 0) + change,
         user: post.user,
+        // ✨ Use the explicitly passed new status
+        isLikedByCurrentUser: newIsLiked, 
       );
       notifyListeners();
     }

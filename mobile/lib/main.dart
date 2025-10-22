@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/data/services/auth/auth_service.dart';
+import 'package:mobile/data/services/blog_service.dart';
 import 'package:mobile/data/services/chat_service.dart';
 import 'package:mobile/data/services/message_service.dart';
 import 'package:mobile/data/services/post_service.dart';
 import 'package:mobile/navigation/widget_tree.dart';
 import 'package:mobile/providers/auth/auth_provider.dart';
+import 'package:mobile/providers/blog_comment_provider.dart';
 import 'package:mobile/providers/blog_filter_provider.dart';
+import 'package:mobile/providers/blog_provider.dart';
 import 'package:mobile/providers/chat_provider.dart';
 import 'package:mobile/providers/comment_provider.dart';
 import 'package:mobile/providers/image_provider.dart';
@@ -23,8 +26,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() {
   final authService = AuthService();
   final chatService = ChatService(authService);
-  final messageService = MessageService();
+  final messageService = MessageService(authService);
   final postService = PostService(authService);
+  final blogService = BlogService(authService);
   runApp(
     MultiProvider(
       providers: [
@@ -39,7 +43,9 @@ void main() {
         ChangeNotifierProvider(create: (_) => PostFilterProvider()),
         ChangeNotifierProvider(create: (_) => PostProvider(postService)),
         ChangeNotifierProvider(create: (_) => CommentProvider(postService)),
-        ChangeNotifierProvider(create: (_)=> PostImageProvider())
+        ChangeNotifierProvider(create: (_)=> PostImageProvider()),
+        ChangeNotifierProvider(create: (_)=> BlogProvider(blogService)),
+        ChangeNotifierProvider(create: (_)=> BlogCommentProvider(blogService)),
       ],
       child: MyApp(),
     ),

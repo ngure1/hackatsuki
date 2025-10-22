@@ -33,7 +33,11 @@ class ChatListDrawer extends StatelessWidget {
                               .getMessagesForChat(chat.id ?? '')
                               .isNotEmpty;
                           return ListTile(
-                            title: Text('Chat ${index + 1}'),
+                            title: Text(
+                              chat.title?.isNotEmpty == true
+                                ? chat.title!
+                                : 'Chat ${index + 1}',
+                            ),
                             subtitle: hasMessages
                                 ? Text(
                                     '${messageProvider.getMessagesForChat(chat.id ?? '').length} messages',
@@ -59,7 +63,7 @@ class ChatListDrawer extends StatelessWidget {
                             onTap: () async {
                               try {
                                 chatProvider.setActiveChat(chat);
-                                messageProvider.setActiveChat(chat.id!);
+                                await messageProvider.setActiveChat(chat.id!);
 
                                 Navigator.pop(context);
                                 Navigator.pushReplacement(
