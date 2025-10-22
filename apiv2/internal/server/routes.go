@@ -38,7 +38,8 @@ func (s *FiberServer) RegisterFiberRoutes() {
 	s.Get("/oauth/google", h.GoogleAuthHandler)
 	s.Get("/oauth/redirect", h.GoogleAuthRedirectHandler)
 
-	s.Patch("/users", h.AuthMiddleware(), h.UpdatePhoneNumber)
+	s.Patch("/users", h.AuthMiddleware(), h.UpdatePhoneAndLocation)
+	s.Get("/users/me", h.AuthMiddleware(), h.GetMe)
 
 	//chat routes
 	chatRoutes := s.Group("/chats")
@@ -51,7 +52,7 @@ func (s *FiberServer) RegisterFiberRoutes() {
 
 	// community post routes
 	postRoutes := s.Group("/posts")
-	postRoutes.Get("/", h.OptionalAuthMiddleware(), h.GetPosts) // Use optional auth to get isLiked
+	postRoutes.Get("/", h.OptionalAuthMiddleware(), h.GetPosts)       // Use optional auth to get isLiked
 	postRoutes.Get("/:postId", h.OptionalAuthMiddleware(), h.GetPost) // Use optional auth to get isLiked
 	//protected
 	postRoutes.Post("/", h.AuthMiddleware(), h.CreatePost)
@@ -62,7 +63,7 @@ func (s *FiberServer) RegisterFiberRoutes() {
 
 	// blog routes
 	blogRoutes := s.Group("/blogs")
-	blogRoutes.Get("/", h.OptionalAuthMiddleware(), h.GetBlogs) // Use optional auth to get isLiked
+	blogRoutes.Get("/", h.OptionalAuthMiddleware(), h.GetBlogs)       // Use optional auth to get isLiked
 	blogRoutes.Get("/:blogId", h.OptionalAuthMiddleware(), h.GetBlog) // Use optional auth to get isLiked
 	//protected
 	blogRoutes.Post("/", h.AuthMiddleware(), h.CreateBlog)

@@ -39,8 +39,10 @@ definitions:
       password:
         type: string
     type: object
-  requests.UpdatePhoneNumberRequest:
+  requests.UpdatePhoneAndLocationRequest:
     properties:
+      city:
+        type: string
       phone_number:
         type: string
     type: object
@@ -58,8 +60,8 @@ definitions:
         type: integer
       replies_count:
         type: integer
-      user_id:
-        type: integer
+      user:
+        $ref: '#/definitions/responses.UserResponse'
     type: object
   responses.BlogResponse:
     properties:
@@ -121,8 +123,8 @@ definitions:
         type: integer
       replies_count:
         type: integer
-      user_id:
-        type: integer
+      user:
+        $ref: '#/definitions/responses.UserResponse'
     type: object
   responses.MessageResponse:
     description: A message sent in a chat, including sender type and timestamps.
@@ -167,6 +169,23 @@ definitions:
         type: string
       user:
         $ref: '#/definitions/responses.UserResponse'
+    type: object
+  responses.UserProfileResponse:
+    properties:
+      city:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: integer
+      last_name:
+        type: string
+      phone_number:
+        type: string
     type: object
   responses.UserResponse:
     properties:
@@ -964,14 +983,15 @@ paths:
     patch:
       consumes:
       - application/json
-      description: Updates the logged in users phone number
+      description: Updates the logged in users phone number and city for better agricultural
+        context
       parameters:
-      - description: Phone number to use
+      - description: Phone number and city information
         in: body
-        name: phoneNumber
+        name: phoneAndLocation
         required: true
         schema:
-          $ref: '#/definitions/requests.UpdatePhoneNumberRequest'
+          $ref: '#/definitions/requests.UpdatePhoneAndLocationRequest'
       produces:
       - application/json
       responses:
@@ -995,7 +1015,38 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: Update the users phone number
+      summary: Update the users phone number and location
+      tags:
+      - Users
+  /users/me:
+    get:
+      description: Get the authenticated user's profile information
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.UserProfileResponse'
+        "401":
+          description: Unauthenticated
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: User not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get current user profile
       tags:
       - Users
 swagger: "2.0"

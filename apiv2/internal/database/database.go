@@ -15,6 +15,6 @@ func New() *gorm.DB {
 	}
 
 	// db.Migrator().DropTable(&models.User{})
-	db.AutoMigrate(&models.User{}, &models.Chat{}, &models.Message{}, &models.Post{}, &models.Comment{}, &models.Like{})
+	db.AutoMigrate(&models.User{}, &models.Chat{}, &models.Message{}, &models.Post{}, &models.Comment{}, &models.Like{}, &models.Blog{}, &models.BlogComment{}, &models.BlogLike{})
 	return db
 }

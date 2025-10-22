@@ -26,7 +26,8 @@ type Comment struct {
 
 	ParentCommentId *uint     `json:"parent_comment_id"`
 	PostId          uint      `json:"post_id"           gorm:"index"`
-	UserID          uint      `json:"user_id"`
+	UserID          uint      `json:"user_id"           gorm:"index"`
+	User            User      `json:"user"              gorm:"foreignkey:UserID"`
 	Replies         []Comment `json:"-"                 gorm:"foreignkey:ParentCommentId"`
 }
 
@@ -56,7 +57,8 @@ type BlogComment struct {
 
 	ParentCommentId *uint         `json:"parent_comment_id"`
 	BlogId          uint          `json:"blog_id"           gorm:"index"`
-	UserID          uint          `json:"user_id"`
+	UserID          uint          `json:"user_id"           gorm:"index"`
+	User            User          `json:"user"              gorm:"foreignkey:UserID"`
 	Replies         []BlogComment `json:"-"                 gorm:"foreignkey:ParentCommentId"`
 }
 

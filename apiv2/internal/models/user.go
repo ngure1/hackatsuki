@@ -8,6 +8,7 @@ import "gorm.io/gorm"
 // email (unique, nullable if phone used)
 // phone_number (unique, nullable if email used)
 // password_hash
+// city for location context
 // created_at
 // updated_at
 // role_id (FK → Role.role_id)
@@ -20,6 +21,9 @@ type User struct {
 	PhoneNumber   *string `json:"phone_number"    gorm:"unique;index"`
 	PasswordHash  *string `json:"-"`
 	IsPasswordSet *bool   `json:"is_password_set" gorm:"default:true"`
+
+	// Location metadata for agricultural context
+	City *string `json:"city"`
 
 	// relations
 	Chats []Chat `json:"chats"`

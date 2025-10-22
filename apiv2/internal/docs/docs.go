@@ -1175,7 +1175,7 @@ const docTemplate = `{
         },
         "/users": {
             "patch": {
-                "description": "Updates the logged in users phone number",
+                "description": "Updates the logged in users phone number and city for better agricultural context",
                 "consumes": [
                     "application/json"
                 ],
@@ -1185,21 +1185,68 @@ const docTemplate = `{
                 "tags": [
                     "Users"
                 ],
-                "summary": "Update the users phone number",
+                "summary": "Update the users phone number and location",
                 "parameters": [
                     {
-                        "description": "Phone number to use",
-                        "name": "phoneNumber",
+                        "description": "Phone number and city information",
+                        "name": "phoneAndLocation",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/requests.UpdatePhoneNumberRequest"
+                            "$ref": "#/definitions/requests.UpdatePhoneAndLocationRequest"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK"
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/me": {
+            "get": {
+                "description": "Get the authenticated user's profile information",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get current user profile",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/responses.UserProfileResponse"
+                        }
                     },
                     "401": {
                         "description": "Unauthenticated",
@@ -1294,9 +1341,12 @@ const docTemplate = `{
                 }
             }
         },
-        "requests.UpdatePhoneNumberRequest": {
+        "requests.UpdatePhoneAndLocationRequest": {
             "type": "object",
             "properties": {
+                "city": {
+                    "type": "string"
+                },
                 "phone_number": {
                     "type": "string"
                 }
@@ -1323,8 +1373,8 @@ const docTemplate = `{
                 "replies_count": {
                     "type": "integer"
                 },
-                "user_id": {
-                    "type": "integer"
+                "user": {
+                    "$ref": "#/definitions/responses.UserResponse"
                 }
             }
         },
@@ -1416,8 +1466,8 @@ const docTemplate = `{
                 "replies_count": {
                     "type": "integer"
                 },
-                "user_id": {
-                    "type": "integer"
+                "user": {
+                    "$ref": "#/definitions/responses.UserResponse"
                 }
             }
         },
@@ -1482,6 +1532,32 @@ const docTemplate = `{
                 },
                 "user": {
                     "$ref": "#/definitions/responses.UserResponse"
+                }
+            }
+        },
+        "responses.UserProfileResponse": {
+            "type": "object",
+            "properties": {
+                "city": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
                 }
             }
         },
