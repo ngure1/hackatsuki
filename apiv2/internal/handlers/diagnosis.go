@@ -27,12 +27,28 @@ func (h *Handler) GetDiagnosis(c *fiber.Ctx) error {
 		})
 	}
 
-	_, err = h.chatStore.GetChatById(uint(chatId))
+	chat, err := h.chatStore.GetChatById(uint(chatId))
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
 			"message": "error retrieving chat by id",
 			"error":   err.Error(),
 		})
+	}
+
+	// Get user location context if user is authenticated
+	var locationContext string
+	if userIdInterface := c.Locals("userId"); userIdInterface != nil {
+		userId := userIdInterface.(uint)
+		user, userErr := h.userStore.GetUserById(userId)
+		if userErr == nil && user != nil && user.City != nil {
+			locationContext = fmt.Sprintf("User is located in %s. Please consider local agricultural conditions, common crops, climate, and farming practices for this area when providing recommendations and diagnosis.", *user.City)
+		}
+	} else if chat.UserID != nil {
+		// If not authenticated but chat has a user, try to get location from chat owner
+		user, userErr := h.userStore.GetUserById(*chat.UserID)
+		if userErr == nil && user != nil && user.City != nil {
+			locationContext = fmt.Sprintf("User is located in %s. Please consider local agricultural conditions, common crops, climate, and farming practices for this area when providing recommendations and diagnosis.", *user.City)
+		}
 	}
 
 	var previousMessages string
@@ -46,14 +62,11 @@ func (h *Handler) GetDiagnosis(c *fiber.Ctx) error {
 	for _, message := range messages {
 		previousMessages += fmt.Sprintf("{role: %s,content: %s}", message.SenderType, message.Content)
 	}
-	imageRequired := len(messages) == 0
+
+	// Handle optional image upload
 	file, err := c.FormFile("image")
-	if err != nil && imageRequired {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": "image file is required",
-			"error":   err.Error(),
-		})
-	}
+	// Image is now fully optional - no error handling for missing image
+
 	var userContent string
 	if file != nil {
 		c.SaveFile(file, fmt.Sprintf("%s%s", FilePath, file.Filename))
@@ -63,6 +76,14 @@ func (h *Handler) GetDiagnosis(c *fiber.Ctx) error {
 	prompt := c.FormValue("prompt", "")
 	if prompt != "" {
 		userContent += fmt.Sprintf("Prompt: %s", prompt)
+	}
+
+	// Ensure we have some content to process (either image, prompt, or both)
+	if file == nil && prompt == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Either an image or a prompt (or both) must be provided",
+			"error":   "No content provided for diagnosis",
+		})
 	}
 
 	userMessage := &models.Message{
@@ -88,11 +109,16 @@ func (h *Handler) GetDiagnosis(c *fiber.Ctx) error {
 
 			parts = append(
 				parts,
-				genai.NewPartFromText("You are given the following two text inputs"),
+				genai.NewPartFromText("You are given the following text inputs"),
 				genai.NewPartFromText(fmt.Sprintf("System Prompt:\n%s", p.SystemPrompt)),
-				genai.NewPartFromText(fmt.Sprintf("User Prompt:\n%s", prompt)),
-				genai.NewPartFromText(p.TitlePrompt),
 			)
+
+			if locationContext != "" {
+				parts = append(parts, genai.NewPartFromText(locationContext))
+			}
+
+			parts = append(parts, genai.NewPartFromText(fmt.Sprintf("User Prompt:\n%s", prompt)))
+			parts = append(parts, genai.NewPartFromText(p.TitlePrompt))
 
 			if file != nil {
 				uploadedFile, _ := client.Files.UploadFromPath(
@@ -144,8 +170,13 @@ func (h *Handler) GetDiagnosis(c *fiber.Ctx) error {
 
 		var parts []*genai.Part
 
+		parts = append(parts, genai.NewPartFromText(fmt.Sprintf("System Prompt:\n%s", p.SystemPrompt)))
+
+		if locationContext != "" {
+			parts = append(parts, genai.NewPartFromText(locationContext))
+		}
+
 		parts = append(parts,
-			genai.NewPartFromText(fmt.Sprintf("System Prompt:\n%s", p.SystemPrompt)),
 			genai.NewPartFromText(fmt.Sprintf("Chat history:\n%s", previousMessages)),
 			genai.NewPartFromText(fmt.Sprintf("User Prompt:\n%s", prompt)),
 		)
