@@ -70,7 +70,7 @@ func (h *Handler) GetDiagnosis(c *fiber.Ctx) error {
 	var userContent string
 	if file != nil {
 		c.SaveFile(file, fmt.Sprintf("%s%s", FilePath, file.Filename))
-		userContent += fmt.Sprintf("Image: %s (size: %d bytes)\n", file.Filename, len(file.Filename))
+		userContent += fmt.Sprintf("Image: %s:%s/public/%s (size: %d bytes)\n", os.Getenv("BACKEND_URL"), os.Getenv("PORT"), file.Filename, len(file.Filename))
 	}
 
 	prompt := c.FormValue("prompt", "")
