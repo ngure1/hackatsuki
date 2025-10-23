@@ -117,12 +117,12 @@ func (h *Handler) GoogleAuthRedirectHandler(c *fiber.Ctx) error {
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Param token body map[string]string true "Google ID Token" example({"id_token": "eyJhbGciOiJSUzI1NiIs..."})
+// @Param id_token body map[string]string true "Google ID Token" example({"id_token": "eyJhbGciOiJSUzI1NiIs..."})
 // @Success 200 {object} map[string]string "access_token"
 // @Failure 400 {object} map[string]string "Invalid request"
 // @Failure 401 {object} map[string]string "Invalid token"
 // @Failure 500 {object} map[string]string "Server error"
-// @Router /oauth/google/mobile [post]
+// @Router /oauth/google/v2 [post]
 func (h *Handler) GoogleAuthMobileHandler(c *fiber.Ctx) error {
 	var reqBody map[string]string
 	if err := c.BodyParser(&reqBody); err != nil {

@@ -641,6 +641,50 @@ paths:
       summary: Google OAuth2 login
       tags:
       - Auth
+  /oauth/google/v2:
+    post:
+      consumes:
+      - application/json
+      description: Verifies Google ID token from mobile app and returns JWT token
+      parameters:
+      - description: Google ID Token
+        in: body
+        name: id_token
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: access_token
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Invalid token
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Google OAuth2 mobile token verification
+      tags:
+      - Auth
   /oauth/redirect:
     get:
       description: Handles Google OAuth2 callback, retrieves user info, creates or
