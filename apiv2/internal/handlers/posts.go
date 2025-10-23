@@ -24,12 +24,17 @@ func (h *Handler) handleCreatePost(c *fiber.Ctx, userId uint, chatUrl *string) (
 	question := c.FormValue("question")
 	description := c.FormValue("description")
 	crop := c.FormValue("crop")
+	tags := c.FormValue("tags")
+	var tagsPtr *string
+	if tags != "" {
+		tagsPtr = &tags
+	}
 
 	if question == "" || description == "" {
 		return nil, fmt.Errorf("question or description cannot be empty")
 	}
 
-	post, err := h.postsStore.CreatePost(question, description, userId, &crop, imageUrl, chatUrl)
+	post, err := h.postsStore.CreatePost(question, description, userId, &crop, imageUrl, chatUrl, tagsPtr)
 	if err != nil {
 		return nil, err
 	}
@@ -48,6 +53,7 @@ func (h *Handler) handleCreatePost(c *fiber.Ctx, userId uint, chatUrl *string) (
 // @Router /posts [get]
 func (h *Handler) GetPosts(c *fiber.Ctx) error {
 	page := c.QueryInt("page", 1)
+	tags := c.Query("tags", "")
 
 	// Get userId from context if available (optional auth)
 	var userId *uint = nil
@@ -56,7 +62,7 @@ func (h *Handler) GetPosts(c *fiber.Ctx) error {
 		userId = &userIdUint
 	}
 
-	posts, totalPages, err := h.postsStore.GetPosts(page, postsPerPage, userId)
+	posts, totalPages, err := h.postsStore.GetPosts(page, postsPerPage, userId, &tags)
 
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{

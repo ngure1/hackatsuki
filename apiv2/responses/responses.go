@@ -28,6 +28,7 @@ type PostResponse struct {
 	Description   string       `json:"description"`
 	Crop          *string      `json:"crop,omitempty"`
 	ImageUrl      *string      `json:"image_url"`
+	Tags          *string      `json:"tags,omitempty"`
 	User          UserResponse `json:"user"`
 	CommentsCount int64        `json:"comments_count"`
 	LikesCount    int64        `json:"likes_count"`
@@ -73,6 +74,7 @@ type BlogResponse struct {
 	ID            uint         `json:"id"`
 	Title         string       `json:"title"`
 	Content       string       `json:"content"`
+	Tags          *string      `json:"tags,omitempty"`
 	User          UserResponse `json:"user"`
 	CommentsCount int64        `json:"comments_count"`
 	LikesCount    int64        `json:"likes_count"`
