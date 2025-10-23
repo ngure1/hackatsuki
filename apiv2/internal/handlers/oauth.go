@@ -5,7 +5,10 @@ import (
 	"apiv2/internal/models"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
+	"net/http"
+	"os"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -106,4 +109,143 @@ func (h *Handler) GoogleAuthRedirectHandler(c *fiber.Ctx) error {
 	}
 
 	return HandleLogin(newUser, "")(c)
+}
+
+// GoogleAuthMobileHandler godoc
+// @Summary Google OAuth2 mobile token verification
+// @Description Verifies Google ID token from mobile app and returns JWT token
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param id_token body map[string]string true "Google ID Token" example({"id_token": "eyJhbGciOiJSUzI1NiIs..."})
+// @Success 200 {object} map[string]string "access_token"
+// @Failure 400 {object} map[string]string "Invalid request"
+// @Failure 401 {object} map[string]string "Invalid token"
+// @Failure 500 {object} map[string]string "Server error"
+// @Router /oauth/google/v2 [post]
+func (h *Handler) GoogleAuthMobileHandler(c *fiber.Ctx) error {
+	var reqBody map[string]string
+	if err := c.BodyParser(&reqBody); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Invalid request body",
+			"error":   err.Error(),
+		})
+	}
+
+	idToken, exists := reqBody["id_token"]
+	if !exists || idToken == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Missing id_token in request body",
+		})
+	}
+
+	// Verify the ID token with Google
+	googleUser, err := h.verifyGoogleIDToken(idToken)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"message": "Invalid Google ID token",
+			"error":   err.Error(),
+		})
+	}
+
+	// Check if user already exists
+	existingUser, err := h.userStore.GetUserByEmail(googleUser.Email)
+	if err == nil && existingUser != nil {
+		return HandleLogin(existingUser, "")(c)
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Error looking up user",
+			"error":   err.Error(),
+		})
+	}
+
+	// Create new user
+	names := strings.Split(googleUser.Name, " ")
+	var newUser *models.User
+	isPasswordSet := false
+
+	if len(names) >= 2 {
+		newUser = &models.User{
+			FirstName:     names[0],
+			LastName:      strings.Join(names[1:], " "),
+			Email:         &googleUser.Email,
+			IsPasswordSet: &isPasswordSet,
+		}
+	} else {
+		newUser = &models.User{
+			FirstName:     names[0],
+			LastName:      "",
+			Email:         &googleUser.Email,
+			IsPasswordSet: &isPasswordSet,
+		}
+	}
+
+	err = h.userStore.Create(*newUser)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Error creating user",
+			"error":   err.Error(),
+		})
+	}
+
+	return HandleLogin(newUser, "")(c)
+}
+
+// verifyGoogleIDToken verifies the Google ID token and extracts user information
+func (h *Handler) verifyGoogleIDToken(idToken string) (*GoogleUser, error) {
+	// Google's token info endpoint - simpler approach
+	url := fmt.Sprintf("https://oauth2.googleapis.com/tokeninfo?id_token=%s", idToken)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to verify token with Google: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("token verification failed with status: %d", resp.StatusCode)
+	}
+
+	var tokenInfo struct {
+		Email         string `json:"email"`
+		EmailVerified string `json:"email_verified"`
+		Name          string `json:"name"`
+		Picture       string `json:"picture"`
+		GivenName     string `json:"given_name"`
+		FamilyName    string `json:"family_name"`
+		Aud           string `json:"aud"`
+		Iss           string `json:"iss"`
+		Sub           string `json:"sub"`
+		Exp           string `json:"exp"`
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %v", err)
+	}
+
+	if err := json.Unmarshal(body, &tokenInfo); err != nil {
+		return nil, fmt.Errorf("failed to parse token info: %v", err)
+	}
+
+	// Verify the audience (should match your Google Client ID)
+	expectedClientID := os.Getenv("GOOGLE_CLIENT_ID")
+	if tokenInfo.Aud != expectedClientID {
+		return nil, fmt.Errorf("invalid audience: expected %s, got %s", expectedClientID, tokenInfo.Aud)
+	}
+
+	// Verify the issuer
+	if tokenInfo.Iss != "accounts.google.com" && tokenInfo.Iss != "https://accounts.google.com" {
+		return nil, fmt.Errorf("invalid issuer: %s", tokenInfo.Iss)
+	}
+
+	// Email should be verified
+	if tokenInfo.EmailVerified != "true" {
+		return nil, fmt.Errorf("email not verified by Google")
+	}
+
+	return &GoogleUser{
+		Email: tokenInfo.Email,
+		Name:  tokenInfo.Name,
+	}, nil
 }

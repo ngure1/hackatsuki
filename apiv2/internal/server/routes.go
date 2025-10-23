@@ -36,6 +36,7 @@ func (s *FiberServer) RegisterFiberRoutes() {
 	s.Post("/signin", h.SigninHandler)
 	s.Post("/signup", h.SignupHandler)
 	s.Get("/oauth/google", h.GoogleAuthHandler)
+	s.Post("/oauth/google/v2", h.GoogleAuthMobileHandler)
 	s.Get("/oauth/redirect", h.GoogleAuthRedirectHandler)
 
 	s.Patch("/users", h.AuthMiddleware(), h.UpdatePhoneAndLocation)
