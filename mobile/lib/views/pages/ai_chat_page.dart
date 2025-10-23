@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/providers/chat_provider.dart';
 import 'package:mobile/providers/image_provider.dart';
 import 'package:mobile/providers/message_provider.dart';
 import 'package:mobile/theme.dart';
@@ -16,34 +17,87 @@ class AiChatPage extends StatefulWidget {
 
 class _AiChatPageState extends State<AiChatPage> {
   final TextEditingController _inputController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  bool _isInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final imageProvider = context.read<ImageProviderNotifier>();
-      final messageProvider = context.read<MessageProvider>();
+    _initializeChat();
+  }
 
-      final prefilledText = messageProvider.getPrefilledMessage(imageProvider);
-      if (prefilledText.isNotEmpty) {
-        _inputController.text = prefilledText;
-        _inputController.selection = TextSelection.fromPosition(
-          TextPosition(offset: _inputController.text.length),
-        );
+  Future<void> _initializeChat() async {
+    await WidgetsBinding.instance.endOfFrame;
+
+    final chatProvider = context.read<ChatProvider>();
+    final messageProvider = context.read<MessageProvider>();
+    final imageProvider = context.read<ImageProviderNotifier>();
+
+    try {
+      if (chatProvider.chats.isEmpty) {
+        await chatProvider.fetchChats();
       }
-    });
+
+      if (chatProvider.activeChat == null) {
+        if (chatProvider.chats.isNotEmpty) {
+          chatProvider.setActiveChat(chatProvider.chats.first);
+        } else {
+          final newChat = await chatProvider.createNewChat();
+          if (newChat != null) {
+            chatProvider.setActiveChat(newChat);
+          }
+        }
+      }
+
+      final activeChat = chatProvider.activeChat;
+      if (activeChat != null && activeChat.id != null) {
+        await messageProvider.setActiveChat(activeChat.id!);
+
+        final prefilledText = messageProvider.getPrefilledMessage(
+          imageProvider,
+        );
+        if (prefilledText.isNotEmpty && _inputController.text.isEmpty) {
+          _inputController.text = prefilledText;
+          _inputController.selection = TextSelection.fromPosition(
+            TextPosition(offset: _inputController.text.length),
+          );
+        }
+      }
+    } catch (e) {
+      print("Error initializing chat: $e");
+    } finally {
+      setState(() {
+        _isInitialized = true;
+      });
+    }
   }
 
   @override
   void dispose() {
     _inputController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
   void _sendMessage() {
+    if (!_isInitialized) {
+      print('DEBUG: Chat not initialized yet');
+      return;
+    }
+    ;
+
     final imageProvider = context.read<ImageProviderNotifier>();
     final messageProvider = context.read<MessageProvider>();
     final text = _inputController.text.trim();
+
+    print(
+      "DEBUG: Send button pressed - text: '$text', image: ${imageProvider.selectedImage != null}",
+    );
+
+    if (messageProvider.isLoading && messageProvider.activeChatId != null) {
+      messageProvider.cancelStreamForChat(messageProvider.activeChatId!);
+      return;
+    }
 
     if (text.isEmpty && imageProvider.selectedImage == null) return;
 
@@ -53,10 +107,32 @@ class _AiChatPageState extends State<AiChatPage> {
     imageProvider.clear();
   }
 
-  Widget _buildInputBar() {
+  void _scrollListener() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+            _scrollController.animateTo(
+                _scrollController.position.maxScrollExtent,
+                duration: const Duration(milliseconds: 150),
+                curve: Curves.easeOut,
+            );
+        }
+    });
+}
 
-    return Consumer<ImageProviderNotifier>(
-      builder: (context, imageProvider, _) {
+@override
+void didChangeDependencies() {
+    super.didChangeDependencies();
+    
+    final messageProvider = context.watch<MessageProvider>();
+    messageProvider.addListener(_scrollListener);
+}
+
+  Widget _buildInputBar() {
+    return Consumer2<ImageProviderNotifier, MessageProvider>(
+      builder: (context, imageProvider, messageProvider, _) {
+        final currentChatId = messageProvider.activeChatId;
+        final isCurrentChatLoading = messageProvider.isLoading;
+
         return Padding(
           padding: const EdgeInsets.all(8.0),
           child: Column(
@@ -90,15 +166,7 @@ class _AiChatPageState extends State<AiChatPage> {
                               color: Colors.white,
                               size: 18,
                             ),
-                            iconSize: 18,
-                            padding: const EdgeInsets.all(4),
-                            constraints: const BoxConstraints(
-                              minWidth: 26,
-                              minHeight: 26,
-                            ),
-                            onPressed: () {
-                              imageProvider.clear();
-                            },
+                            onPressed: () => imageProvider.clear(),
                           ),
                         ),
                       ),
@@ -111,6 +179,7 @@ class _AiChatPageState extends State<AiChatPage> {
                   Expanded(
                     child: TextField(
                       controller: _inputController,
+                      enabled: !isCurrentChatLoading,
                       maxLines: null,
                       keyboardType: TextInputType.multiline,
                       textInputAction: TextInputAction.newline,
@@ -129,12 +198,24 @@ class _AiChatPageState extends State<AiChatPage> {
                   const SizedBox(width: 8),
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.green,
+                      color: (isCurrentChatLoading || currentChatId == null)
+                          ? Colors.grey
+                          : AppTheme.green1,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.send, color: Colors.white),
-                      onPressed: _sendMessage,
+                      icon: Icon(
+                        isCurrentChatLoading ? Icons.stop_circle : Icons.send,
+                        color: Colors.white,
+                      ),
+                      // Adjusted onPressed logic
+                      onPressed: currentChatId == null
+                          ? null
+                          : (isCurrentChatLoading
+                                ? () => messageProvider.cancelStreamForChat(
+                                    currentChatId,
+                                  )
+                                : _sendMessage),
                     ),
                   ),
                 ],
@@ -149,7 +230,7 @@ class _AiChatPageState extends State<AiChatPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.appBarBackground,
+      backgroundColor: AppTheme.green4,
       drawer: ChatListDrawer(),
       appBar: AppbarWidget(
         leading: Builder(
@@ -159,50 +240,106 @@ class _AiChatPageState extends State<AiChatPage> {
           ),
         ),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Consumer<MessageProvider>(
-              builder: (context, provider, _) {
-                if (provider.messages.isEmpty) {
-                  return const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.chat_bubble_outline,
-                          size: 64,
-                          color: Colors.grey,
-                        ),
-                        SizedBox(height: 16),
-                        Text(
-                          'Start a conversation with AI',
-                          style: TextStyle(fontSize: 18, color: Colors.grey),
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          'Upload an image or ask about your plants',
-                          style: TextStyle(fontSize: 14, color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                  );
-                }
+      body: !_isInitialized
+          ? Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                Expanded(
+                  child: Consumer<MessageProvider>(
+                    builder: (context, provider, _) {
+                      if (provider.messages.isEmpty) {
+                        return const Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.chat_bubble_outline,
+                                size: 64,
+                                color: Colors.grey,
+                              ),
+                              SizedBox(height: 16),
+                              Text(
+                                'Start a conversation with AI',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                'Upload an image or ask about your plants',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
 
-                return ListView.builder(
-                  padding: const EdgeInsets.all(10),
-                  itemCount: provider.messages.length,
-                  itemBuilder: (context, index) {
-                    final msg = provider.messages[index];
-                    return buildMessageBubble(msg);
-                  },
-                );
-              },
+                      return ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.all(10),
+                        itemCount:
+                            provider.messages.length +
+                            (provider.isLoading ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          if (index < provider.messages.length) {
+                            final msg = provider.messages[index];
+
+                            final contentWidget = provider.buildMessageWidget(
+                              msg,
+                            );
+
+                            return buildMessageBubble(
+                              msg,
+                              contentWidget,
+                              key: ValueKey(msg.id),
+                            );
+                          } else {
+                            return Align(
+                              alignment: Alignment.centerLeft,
+                              child: Container(
+                                key: const ValueKey(
+                                  'streaming_loading_indicator',
+                                ),
+                                margin: const EdgeInsets.symmetric(
+                                  vertical: 4.0,
+                                ),
+                                padding: const EdgeInsets.all(12.0),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade300,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: const [
+                                    SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      "🤖 Working...",
+                                      style: TextStyle(color: Colors.black54),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                      );
+                    },
+                  ),
+                ),
+                _buildInputBar(),
+              ],
             ),
-          ),
-          _buildInputBar(),
-        ],
-      ),
     );
   }
 }

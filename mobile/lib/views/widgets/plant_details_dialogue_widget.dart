@@ -70,7 +70,7 @@ class _PlantDetailsDialogueWidgetState
               Row(
                 children: [
                   Image.asset(
-                    'assets/images/plant_image.png',
+                    'assets/images/logo.jpeg',
                     width: 24,
                     height: 24,
                   ),

@@ -4,8 +4,10 @@ flutter_native_splash:
   web: false
 
   color: '#22c55e'
+  image: 'assets/images/logo.jpeg'
   branding: 'assets/images/aigow_text.png'
 
   android_12:
     color: '#22c55e'
+    image: 'assets/images/logo.jpeg'
     branding: 'assets/images/aigow_text.png'

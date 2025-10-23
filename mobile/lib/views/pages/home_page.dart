@@ -1,7 +1,9 @@
 import "package:dotted_border/dotted_border.dart";
 import "package:flutter/material.dart";
 import "package:mobile/navigation/app_navigator.dart";
+import "package:mobile/providers/chat_provider.dart";
 import "package:mobile/providers/image_provider.dart";
+import "package:mobile/providers/message_provider.dart";
 import "package:mobile/providers/navigation_provider.dart";
 import "package:mobile/theme.dart";
 import "package:mobile/views/widgets/appbar_widget.dart";
@@ -45,13 +47,25 @@ class HomePage extends StatelessWidget {
         initialPlantName: imageProvider.plantName,
         initialPlantPart: imageProvider.plantPart,
         initialDescription: imageProvider.description,
-        onSave: (plantName, plantPart, description) {
+        onSave: (plantName, plantPart, description) async{
           imageProvider.setPlantDetails(
             plantName: plantName,
             plantPart: plantPart,
             description: description,
           );
+
+          final chatProvider = dialogContext.read<ChatProvider>();
+          final messageProvider = dialogContext.read<MessageProvider>();
           Navigator.pop(dialogContext);
+          try {
+            final newChat = await chatProvider.createNewChat();
+            
+            if (newChat != null && newChat.id != null) {
+                messageProvider.setActiveChat(newChat.id!);
+            }
+        } catch (e) {
+            print('Failed to create new chat: $e');
+        }
           context.read<NavigationProvider>().selectPage(1);
           AppNavigator.navigatorKey.currentState?.pushReplacementNamed('/chat');
         },
@@ -90,7 +104,7 @@ class HomePage extends StatelessWidget {
                       children: [
                         SizedBox(height: 10.0),
                         Image.asset(
-                          'assets/images/plant_image.png',
+                          'assets/images/logo.jpeg',
                           width: 30,
                           height: 30,
                         ),

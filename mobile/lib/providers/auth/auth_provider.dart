@@ -29,6 +29,11 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> markOnboardingCompleted() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('seenOnboarding', true);
+  }
+
   Future<void> loadUser() async {
     final prefs = await SharedPreferences.getInstance();
     final jsonUser = prefs.getString('user');
@@ -51,7 +56,7 @@ class AuthProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('user', jsonEncode(user.toJson()));
 
-    if (_authService.refreshToken != null) {
+    if (_authService.accessToken != null) {
       await _storage.write(key: 'accessToken', value: _authService.accessToken);
     }
     if (_authService.refreshToken != null) {
@@ -62,45 +67,41 @@ class AuthProvider extends ChangeNotifier {
     }
 
     _user = mergedUser;
-
     _tempPhoneNumber = null;
 
     notifyListeners();
   }
 
   Future<void> signup({
-  required String firstName,
-  required String lastName,
-  required String email,
-  required String password,
-}) async {
-  _isLoading = true;
-  notifyListeners();
-
-  try {
-    final user = await _authService.signupWithEmail(
-      firstName: firstName,
-      lastName: lastName,
-      email: email,
-      password: password,
-    );
-    await _saveUser(user);
-  } finally {
-    _isLoading = false;
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String password,
+  }) async {
+    _isLoading = true;
     notifyListeners();
+
+    try {
+      final user = await _authService.signupWithEmail(
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        password: password,
+      );
+      await _saveUser(user);
+      await loginWithEmail(email, password);
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
-}
-
-
-
 
   Future<void> loginWithEmail(String email, String password) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      final user = await _authService.loginWithEmail(email, password);
-      await _saveUser(user);
+      await _authService.loginWithEmail(email, password);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -113,8 +114,8 @@ class AuthProvider extends ChangeNotifier {
 
     try {
       final redirectUrl = await FlutterWebAuth2.authenticate(
-        url: '$baseUrl/oauth/google?redirect_uri=aigrowapp://auth',   
-        callbackUrlScheme: 'aigrowapp',  
+        url: '$baseUrl/oauth/google?redirect_uri=aigrowapp://auth',
+        callbackUrlScheme: 'aigrowapp',
       );
 
       final code = Uri.parse(redirectUrl).queryParameters['code'];
@@ -128,7 +129,6 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  
   Future<void> refreshToken() async {
     try {
       await _authService.refreshAuthToken();

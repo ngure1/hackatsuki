@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/providers/auth/auth_provider.dart';
 import 'package:mobile/theme.dart';
+import 'package:mobile/views/widgets/beautified_text_field_widget.dart';
 import 'package:mobile/views/widgets/custom_container_widget.dart';
 import 'package:mobile/views/widgets/onboarding_button_widget.dart';
 import 'package:mobile/views/widgets/text_input_widget.dart';
@@ -21,6 +22,7 @@ class _IntroPage2State extends State<IntroPage2> {
   final TextEditingController _passwordController = TextEditingController();
 
   bool _isLoading = false;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -132,22 +134,32 @@ class _IntroPage2State extends State<IntroPage2> {
                     "What will your password be?",
                     style: AppTheme.labelMedium.copyWith(color: AppTheme.white),
                   ),
-                  TextField(
+                  BeautifiedTextFieldWidget(
                     controller: _passwordController,
-                    obscureText: true,
-                    style: AppTheme.bodyMedium.copyWith(color: AppTheme.gray2),
-                    decoration: InputDecoration(
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: AppTheme.lightGray1),
+                    hint: 'Enter your password',
+                    prefixIcon: Icons.lock_outline,
+                    obscureText: _obscurePassword,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
                       ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: AppTheme.green1),
-                      ),
-                      hintText: 'e.g John',
-                      hintStyle: AppTheme.bodySmall.copyWith(
-                        color: AppTheme.lightGray1,
-                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
                     ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your password';
+                      }
+                      if (value.length < 6) {
+                        return 'Password must be at least 6 characters';
+                      }
+                      return null;
+                    },
                   ),
                   SizedBox(height: 16.0),
                 ],

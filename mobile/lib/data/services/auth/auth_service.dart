@@ -12,8 +12,8 @@ class AuthService {
   String? get refreshToken => _refreshToken;
 
   void _saveTokens(Map<String, dynamic> data) {
-    _accessToken = data['accessToken'];
-    _refreshToken = data['refreshToken'];
+    _accessToken = data['access_token'];
+    _refreshToken = data['refresh_token'];
   }
 
   void restoreTokens(String accessToken, String refreshToken) {
@@ -21,34 +21,42 @@ class AuthService {
     _refreshToken = refreshToken;
   }
 
-Future<UserDetails> signupWithEmail({
-  required String firstName,
-  required String lastName,
-  required String email,
-  required String password,
-}) async {
-  final response = await http.post(
-    Uri.parse('$baseUrl/signup'),
-    headers: {"Content-Type": "application/json"},
-    body: jsonEncode({
-      'first_name': firstName,
-      'last_name': lastName,
-      'email': email,
-      'password': password,
-    }),
-  );
+  Future<UserDetails> signupWithEmail({
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String password,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/signup'),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        'first_name': firstName,
+        'last_name': lastName,
+        'email': email,
+        'password': password,
+      }),
+    );
 
-  if (response.statusCode == 200) {
-    final data = jsonDecode(response.body);
-    _saveTokens(data);
-    return UserDetails.fromJson(data['user']);
-  } else {
-    throw Exception('Signup failed: ${response.body}');
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final data = jsonDecode(response.body);
+      if (data['access_token'] == null) {
+        throw Exception('Signup failed: ${response.body}');
+      }
+      _saveTokens(data);
+
+      return UserDetails(
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        phoneNumber: "",
+      );
+    } else {
+      throw Exception('Signup failed: ${response.statusCode} ${response.body}');
+    }
   }
-}
 
-
-  Future<UserDetails> loginWithEmail(String email, String password) async {
+  Future<void> loginWithEmail(String email, String password) async {
     final response = await http.post(
       Uri.parse('$baseUrl/signin'),
       headers: {"Content-Type": "application/json"},
@@ -57,29 +65,28 @@ Future<UserDetails> signupWithEmail({
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
+
       _saveTokens(data);
-      return UserDetails.fromJson(data['user']);
+      print('tokens saved');
     } else {
       throw Exception('Login Failed: ${response.body}');
     }
   }
 
   Future<UserDetails> loginWithGoogleCode(String code) async {
-  final response = await http.get(
-    Uri.parse('$baseUrl/oauth/redirect?code=$code'),
-    headers: {"Content-Type": "application/json"},
-  );
+    final response = await http.get(
+      Uri.parse('$baseUrl/oauth/redirect?code=$code'),
+      headers: {"Content-Type": "application/json"},
+    );
 
-  if (response.statusCode == 200) {
-    final data = jsonDecode(response.body);
-    _saveTokens(data);
-    return UserDetails.fromJson(data['user']);
-  } else {
-    throw Exception("Google login failed: ${response.body}");
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      _saveTokens(data);
+      return UserDetails.fromJson(data['user']);
+    } else {
+      throw Exception("Google login failed: ${response.body}");
+    }
   }
-}
-
-
 
   Future<void> logout() async {
     if (_accessToken == null) return;
@@ -125,7 +132,7 @@ Future<UserDetails> signupWithEmail({
       throw Exception('Not authenticated');
     }
     return await http.get(
-      Uri.parse('$baseUrl$endpoint'),
+      Uri.parse(endpoint),
       headers: {"Authorization": "Bearer $_accessToken"},
     );
   }
@@ -136,7 +143,7 @@ Future<UserDetails> signupWithEmail({
       throw Exception("Not authenticated");
     }
     return await http.post(
-      Uri.parse("$baseUrl$endpoint"),
+      Uri.parse(endpoint),
       headers: {
         "Authorization": "Bearer $_accessToken",
         "Content-Type": "application/json",
