@@ -6,6 +6,7 @@ import (
 	"apiv2/utils"
 	"errors"
 	"fmt"
+	"strings"
 
 	"gorm.io/gorm"
 )
@@ -241,11 +242,13 @@ func (bs *BlogStore) CreateBlog(
 	title string,
 	content string,
 	userId uint,
+	tags *string,
 ) (*models.Blog, error) {
 	blog := &models.Blog{
 		Title:   title,
 		Content: content,
 		UserID:  userId,
+		Tags:    tags,
 	}
 	err := bs.db.Create(blog).Error
 	if err != nil {
@@ -301,19 +304,68 @@ func (bs *BlogStore) GetBlog(blogId uint, userId *uint) (*responses.BlogResponse
 }
 
 // GetBlogs implements blogs.Store.
-func (bs *BlogStore) GetBlogs(page int, limit int, userId *uint) ([]responses.BlogResponse, int, error) {
+func (bs *BlogStore) GetBlogs(page int, limit int, userId *uint, tags *string) ([]responses.BlogResponse, int, error) {
 	var blogs []models.Blog
 	var response []responses.BlogResponse
 	var totalCount int64
 
-	if err := bs.db.Model(&models.Blog{}).Count(&totalCount).Error; err != nil {
+	// Build base query for counting
+	query := bs.db.Model(&models.Blog{})
+
+	// Add tag filtering if tags parameter is provided
+	if tags != nil && strings.TrimSpace(*tags) != "" {
+		// Split tags by comma and create LIKE conditions for each tag
+		tagList := strings.Split(*tags, ",")
+		var tagConditions []string
+		var tagValues []interface{}
+
+		for _, tag := range tagList {
+			tag = strings.TrimSpace(tag)
+			if tag != "" {
+				tagConditions = append(tagConditions, "tags LIKE ?")
+				tagValues = append(tagValues, "%"+tag+"%")
+			}
+		}
+
+		if len(tagConditions) > 0 {
+			query = query.Where(strings.Join(tagConditions, " OR "), tagValues...)
+		}
+	}
+
+	// Count total records with filtering applied
+	if err := query.Count(&totalCount).Error; err != nil {
 		return nil, 0, fmt.Errorf("error counting blogs: %s", err)
 	}
 
+	// Get paginated results with preloading
 	offset := utils.GetOffset(page, limit)
-	err := bs.db.Preload("BlogComments").Preload("User").Preload("BlogLikes").
-		Limit(limit).Offset(offset).Order("created_at DESC").Find(&blogs).Error
+	finalQuery := bs.db.Preload("BlogComments").Preload("User").Preload("BlogLikes")
 
+	// Apply the same filtering to the final query
+	if tags != nil && strings.TrimSpace(*tags) != "" {
+		tagList := strings.Split(*tags, ",")
+		var tagConditions []string
+		var tagValues []interface{}
+
+		for _, tag := range tagList {
+			tag = strings.TrimSpace(tag)
+			if tag != "" {
+				tagConditions = append(tagConditions, "tags LIKE ?")
+				tagValues = append(tagValues, "%"+tag+"%")
+			}
+		}
+
+		if len(tagConditions) > 0 {
+			finalQuery = finalQuery.Where(strings.Join(tagConditions, " OR "), tagValues...)
+		}
+	}
+
+	err := finalQuery.Limit(limit).Offset(offset).Order("created_at DESC").Find(&blogs).Error
+	if err != nil {
+		return nil, 0, fmt.Errorf("an unexpected error occured when retrieving paginated blogs: %s", err.Error())
+	}
+
+	// Build response DTOs
 	for _, blog := range blogs {
 		commentCount := len(blog.BlogComments)
 		likesCount := len(blog.BlogLikes)
@@ -338,6 +390,7 @@ func (bs *BlogStore) GetBlogs(page int, limit int, userId *uint) ([]responses.Bl
 			ID:            blog.ID,
 			Title:         blog.Title,
 			Content:       blog.Content,
+			Tags:          blog.Tags,
 			User:          user,
 			CommentsCount: int64(commentCount),
 			LikesCount:    int64(likesCount),
@@ -346,10 +399,6 @@ func (bs *BlogStore) GetBlogs(page int, limit int, userId *uint) ([]responses.Bl
 			UpdatedAt:     blog.UpdatedAt,
 		}
 		response = append(response, *blogResp)
-	}
-
-	if err != nil {
-		return nil, 0, fmt.Errorf("an unexpected error occured when retrieving paginated blogs: %s", err.Error())
 	}
 
 	return response, int(totalCount), nil

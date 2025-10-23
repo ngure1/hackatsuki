@@ -118,6 +118,7 @@ func (h *Handler) ShareChatToCommunity(c *fiber.Ctx) error {
 
 	chatUrl := fmt.Sprintf("%s:%s/chats/%d", os.Getenv("BACKEND_URL"), os.Getenv("PORT"), chatId)
 
+	// todo : handle adding tags from here
 	post, err := h.handleCreatePost(c, userId, &chatUrl)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{

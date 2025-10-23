@@ -6,6 +6,7 @@ import (
 	"apiv2/utils"
 	"errors"
 	"fmt"
+	"strings"
 
 	"gorm.io/gorm"
 )
@@ -244,12 +245,14 @@ func (ps *PostStore) CreatePost(
 	crop *string,
 	imageUrl *string,
 	chatUrl *string,
+	tags *string,
 ) (*models.Post, error) {
 	post := &models.Post{
 		Question:    question,
 		Description: description,
 		Crop:        crop,
 		ImageUrl:    imageUrl,
+		Tags:        tags,
 		ChatUrl:     chatUrl,
 		UserID:      userId,
 	}
@@ -297,6 +300,7 @@ func (ps *PostStore) GetPost(postId uint, userId *uint) (*responses.PostResponse
 		Description:   post.Description,
 		Crop:          post.Crop,
 		ImageUrl:      post.ImageUrl,
+		Tags:          post.Tags,
 		User:          user,
 		CommentsCount: int64(commentCount),
 		LikesCount:    int64(likesCount),
@@ -309,19 +313,67 @@ func (ps *PostStore) GetPost(postId uint, userId *uint) (*responses.PostResponse
 }
 
 // GetPosts implements posts.Store.
-func (ps *PostStore) GetPosts(page int, limit int, userId *uint) ([]responses.PostResponse, int, error) {
+func (ps *PostStore) GetPosts(page int, limit int, userId *uint, tags *string) ([]responses.PostResponse, int, error) {
 	var posts []models.Post
 	var response []responses.PostResponse
 	var totalCount int64
 
-	if err := ps.db.Model(&models.Post{}).Count(&totalCount).Error; err != nil {
+	// Build base query
+	query := ps.db.Model(&models.Post{})
+
+	// Add tag filtering if tags parameter is provided
+	if tags != nil && strings.TrimSpace(*tags) != "" {
+		tagList := strings.Split(*tags, ",")
+		var tagConditions []string
+		var tagValues []interface{}
+
+		for _, tag := range tagList {
+			tag = strings.TrimSpace(tag)
+			if tag != "" {
+				tagConditions = append(tagConditions, "tags LIKE ?")
+				tagValues = append(tagValues, "%"+tag+"%")
+			}
+		}
+
+		if len(tagConditions) > 0 {
+			query = query.Where(strings.Join(tagConditions, " OR "), tagValues...)
+		}
+	}
+
+	// Count total records with filtering applied
+	if err := query.Count(&totalCount).Error; err != nil {
 		return nil, 0, fmt.Errorf("error counting posts: %s", err)
 	}
 
+	// Get paginated results with preloading
 	offset := utils.GetOffset(page, limit)
-	err := ps.db.Preload("Comments").Preload("User").Preload("Likes").
-		Limit(limit).Offset(offset).Order("created_at DESC").Find(&posts).Error
+	finalQuery := ps.db.Preload("Comments").Preload("User").Preload("Likes")
 
+	// Apply the same filtering to the final query
+	if tags != nil && strings.TrimSpace(*tags) != "" {
+		tagList := strings.Split(*tags, ",")
+		var tagConditions []string
+		var tagValues []interface{}
+
+		for _, tag := range tagList {
+			tag = strings.TrimSpace(tag)
+			if tag != "" {
+				tagConditions = append(tagConditions, "tags LIKE ?")
+				tagValues = append(tagValues, "%"+tag+"%")
+			}
+		}
+
+		if len(tagConditions) > 0 {
+			finalQuery = finalQuery.Where(strings.Join(tagConditions, " OR "), tagValues...)
+		}
+	}
+
+	err := finalQuery.Limit(limit).Offset(offset).Order("created_at DESC").Find(&posts).Error
+	if err != nil {
+		return nil, 0, fmt.Errorf("an unexpected error occured when retrieving paginated posts: %s", err.Error())
+	}
+
+	// Build response DTOs
 	for _, post := range posts {
 		commentCount := len(post.Comments)
 		likesCount := len(post.Likes)
@@ -348,6 +400,7 @@ func (ps *PostStore) GetPosts(page int, limit int, userId *uint) ([]responses.Po
 			Description:   post.Description,
 			Crop:          post.Crop,
 			ImageUrl:      post.ImageUrl,
+			Tags:          post.Tags,
 			User:          user,
 			CommentsCount: int64(commentCount),
 			LikesCount:    int64(likesCount),
@@ -356,10 +409,6 @@ func (ps *PostStore) GetPosts(page int, limit int, userId *uint) ([]responses.Po
 			UpdatedAt:     post.UpdatedAt,
 		}
 		response = append(response, *postResp)
-	}
-
-	if err != nil {
-		return nil, 0, fmt.Errorf("an unexpected error occured when retrieving paginated posts: %s", err.Error())
 	}
 
 	return response, int(totalCount), nil

@@ -21,6 +21,7 @@ import (
 // @Router /blogs [get]
 func (h *Handler) GetBlogs(c *fiber.Ctx) error {
 	page := c.QueryInt("page", 1)
+	tags := c.Query("tags", "")
 
 	// Get userId from context if available (optional auth)
 	var userId *uint = nil
@@ -29,7 +30,7 @@ func (h *Handler) GetBlogs(c *fiber.Ctx) error {
 		userId = &userIdUint
 	}
 
-	blogs, totalPages, err := h.blogsStore.GetBlogs(page, postsPerPage, userId)
+	blogs, totalPages, err := h.blogsStore.GetBlogs(page, postsPerPage, userId, &tags)
 
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
@@ -118,7 +119,7 @@ func (h *Handler) CreateBlog(c *fiber.Ctx) error {
 		})
 	}
 
-	blog, err := h.blogsStore.CreateBlog(body.Title, body.Content, userId)
+	blog, err := h.blogsStore.CreateBlog(body.Title, body.Content, userId, body.Tags)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
 			"message": "Failed to create blog",

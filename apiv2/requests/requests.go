@@ -36,8 +36,9 @@ type CreateCommentRequest struct {
 
 // Blog requests
 type CreateBlogRequest struct {
-	Title   string `json:"title"`
-	Content string `json:"content"`
+	Title   string  `json:"title"`
+	Content string  `json:"content"`
+	Tags    *string `json:"tags,omitempty"`
 }
 
 type CreateBlogCommentRequest struct {

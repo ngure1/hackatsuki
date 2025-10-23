@@ -12,9 +12,10 @@ type Post struct {
 	Crop        *string `json:"crop,omitempty"`
 	ImageUrl    *string `json:"image_url"`
 	ChatUrl     *string `json:"chat_url,omitempty"`
+	Tags        *string `json:"tags,omitempty"`
 
 	UserID   uint      `json:"user_id" gorm:"index"`
-	User     User      `json:"user"    gorm:"foreignkey:UserID"`
+	User     User      `json:"-"    gorm:"foreignkey:UserID"`
 	Comments []Comment `json:"-"`
 	Likes    []Like    `json:"-"`
 }
@@ -41,11 +42,12 @@ type Like struct {
 type Blog struct {
 	gorm.Model
 
-	Title   string `json:"title"`
-	Content string `json:"content"` // HTML content for rich text blogs
+	Title   string  `json:"title"`
+	Content string  `json:"content"` // HTML content for rich text blogs
+	Tags    *string `json:"tags,omitempty"`
 
 	UserID       uint          `json:"user_id" gorm:"index"`
-	User         User          `json:"user"    gorm:"foreignkey:UserID"`
+	User         User          `json:"-"    gorm:"foreignkey:UserID"`
 	BlogComments []BlogComment `json:"-"`
 	BlogLikes    []BlogLike    `json:"-"`
 }
